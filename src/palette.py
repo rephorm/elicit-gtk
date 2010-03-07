@@ -8,6 +8,18 @@ class Palette:
     self.load_errors = []
     self.colors = []
 
+  def append(self, color):
+    self.colors.append(color)
+
+  def insert_before(self, color, after):
+    self.colors.insert(s.index(after), color)
+
+  def insert_after(self, color, after):
+    self.colors.insert(s.index(after) + 1, color)
+
+  def prepend(self, color):
+    self.colors[0:0] = color
+
   def load(self, filename):
     with open(filename) as f:
       self.filename = filename
@@ -53,3 +65,4 @@ class Palette:
       write("Columns: %d" % self.columns)
       for c in self.colors:
         write("% 3d % 3d % 3d\t%s" % (c.r, c.g, c.b, c.name))
+
