@@ -35,12 +35,13 @@ class Elicit:
 
     vbox = gtk.VBox(False, 5)
     self.win.add(vbox)
-  
-    viewport = gtk.Viewport()
-    vbox.add(viewport)
+
+    frame = gtk.Frame()
+    frame.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+    vbox.add(frame)
 
     self.mag = Magnifier()
-    viewport.add(self.mag)
+    frame.add(self.mag)
 
     self.button = gtk.Button("Button")
     vbox.add(self.button)
