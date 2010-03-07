@@ -22,6 +22,9 @@ class ColorPicker(gtk.Widget):
     self.pick_timeout = None
 
   def pick_immediate(self, x, y):
+    if self.flags() & gtk.REALIZED == False:
+      return
+
     # grab raw screen data
     self.raw_pixbuf.get_from_drawable(
         gdk.get_default_root_window(),
@@ -36,7 +39,7 @@ class ColorPicker(gtk.Widget):
     self.color.set_rgb(r,g,b)
 
     # update gc
-    col = self.gc.get_colormap().alloc_color(r*257,g*257,b*257)
+    col = self.gc.get_colormap().alloc_color(r*257,g*257,b*257, False, False)
     self.gc.set_foreground(col)
 
     self.queue_draw()
