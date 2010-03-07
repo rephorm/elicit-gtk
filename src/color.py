@@ -6,7 +6,12 @@ class Color:
   def __init__(self):
     self.type = self.UNSET
     self.name = "Unnamed"
+    self.r = self.g = self.b = 0
+    self.h = self.s = self.v = 0
     pass
+
+  def __string__(self):
+    return self.hex()
 
   def set_rgb(self, r, g, b):
     if (min(r,g,b) < 0 or max(r,g,b) > 255):
@@ -92,4 +97,3 @@ class Color:
       self.r, self.g, self.b = t, p, v
     elif i == 5:
       self.r, self.g, self.b = v, p, q
-    
