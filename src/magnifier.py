@@ -158,8 +158,8 @@ class Magnifier(gtk.Widget):
   def do_expose_event(self, event):
     # center image in given space
     r = gdk.Rectangle(
-      (self.allocation.width - self.pixbuf_width) / 2,
-      (self.allocation.height - self.pixbuf_height) / 2,
+      int((self.allocation.width - self.pixbuf_width) / 2),
+      int((self.allocation.height - self.pixbuf_height) / 2),
       self.pixbuf_width,
       self.pixbuf_height)
 
