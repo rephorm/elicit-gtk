@@ -22,13 +22,11 @@ class Magnifier(gtk.Widget):
     self.grab_rate = 60
     self.grab_timeout = None
     self.show_grid = True
-
     self.grabbing = False
+    self.has_data = False
 
   def grab_immediate(self, x, y, w, h):
     self.screen_rect = gdk.Rectangle(x, y, w, h)
-
-    print("grab:\nscreen: {0}\nraw:{1},{2}\nscaled:{3},{4}\nzoom:{5}".format(self.screen_rect, self.raw_width, self.raw_height, self.pixbuf_width, self.pixbuf_height, self.zoom))
 
     # if we're grabbing a different size, create new pixbuf of correct size
     if (self.screen_rect.width != self.raw_width or self.screen_rect.height != self.raw_height):
@@ -44,9 +42,13 @@ class Magnifier(gtk.Widget):
         0, 0,
         self.screen_rect.width, self.screen_rect.height)
 
+    self.has_data = True
+
     self.scale()
 
   def scale(self):
+    if self.has_data == False: return
+
     if (self.pixbuf_height != self.raw_height * self.zoom or
         self.pixbuf_width != self.raw_width * self.zoom):
       self.pixbuf_width = int(self.raw_width * self.zoom)
@@ -113,8 +115,8 @@ class Magnifier(gtk.Widget):
   def cb_motion_notify(self, widget, event):
     if (self.grabbing):
       root_w, root_h = gdk.get_default_root_window().get_size()
-      w = int(self.allocation.width / self.zoom)
-      h = int(self.allocation.height / self.zoom)
+      w = int(math.ceil(float(self.allocation.width) / self.zoom))
+      h = int(math.ceil(float(self.allocation.height) / self.zoom))
       x = event.x_root - int(w / 2)
       y = event.y_root - int(h / 2)
 
@@ -174,6 +176,8 @@ class Magnifier(gtk.Widget):
       self.window.move_resize(*allocation)
 
   def do_expose_event(self, event):
+    if self.has_data == False: return
+
     # center image in given space
     r = gdk.Rectangle(
       int((self.allocation.width - self.pixbuf_width) / 2),
@@ -195,11 +199,10 @@ class Magnifier(gtk.Widget):
       y_off = (r.y - r2.y) % self.zoom
 
       xmin = r2.x + x_off
-      xmax = r2.x + r.width
+      xmax = r2.x + r.width + 1
       ymin = r2.y + y_off
-      ymax = r2.y + r.height
+      ymax = r2.y + r.height + 1
 
-      # draw vertical lines
       for x in range(xmin, xmax, self.zoom):
         self.window.draw_line(self.gc, x, r.y, x, r.y + r.height)
 
