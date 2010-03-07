@@ -8,13 +8,20 @@ if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
   raise SystemExit
 
+
 class Magnifier(gtk.Widget):
+  __gsignals__ = {
+      'zoom-changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ()),
+      'grid-toggled': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ())
+  }
+
   def __init__(self):
     super(Magnifier, self).__init__()
 
     self.zoom = 5
     self.grab_rate = 60
     self.grab_timeout = None
+    self.show_grid = True
 
     self.grabbing = False
 
@@ -42,8 +49,8 @@ class Magnifier(gtk.Widget):
   def scale(self):
     if (self.pixbuf_height != self.raw_height * self.zoom or
         self.pixbuf_width != self.raw_width * self.zoom):
-      self.pixbuf_width = self.raw_width * self.zoom
-      self.pixbuf_height = self.raw_height * self.zoom
+      self.pixbuf_width = int(self.raw_width * self.zoom)
+      self.pixbuf_height = int(self.raw_height * self.zoom)
       self.pixbuf = gdk.Pixbuf(gdk.COLORSPACE_RGB, False, 8,
           self.pixbuf_width, self.pixbuf_height)
 
@@ -54,6 +61,20 @@ class Magnifier(gtk.Widget):
         self.zoom, self.zoom,
         gdk.INTERP_NEAREST)
     self.queue_draw()
+
+  def set_show_grid(self, show_grid):
+    if (self.show_grid != show_grid):
+      self.show_grid = show_grid
+      self.emit("grid-toggled")
+      self.queue_draw()
+
+  def set_zoom(self, zoom):
+    zoom = int(zoom)
+    if (zoom <= 0): zoom = 1
+    if (self.zoom != zoom):
+      self.zoom = zoom
+      self.emit("zoom-changed")
+      self.scale()
 
   def cb_grab_timeout(self):
     # repeat time until we've realized the widget
@@ -83,10 +104,7 @@ class Magnifier(gtk.Widget):
     elif (event.direction == gdk.SCROLL_DOWN):
       zoom -= 1
 
-    if (zoom <= 0): zoom = 1
-    if (self.zoom != zoom):
-      self.zoom = zoom
-      self.scale()
+    self.set_zoom(zoom)
 
   def cb_button_release(self, widget, event):
     if (event.button == 1):
@@ -163,11 +181,31 @@ class Magnifier(gtk.Widget):
       self.pixbuf_width,
       self.pixbuf_height)
 
-    r = r.intersect(event.area)
+    r2 = r.intersect(event.area)
 
     self.window.draw_pixbuf(self.gc,
       self.pixbuf,
-      0, 0, 
-      r.x, r.y,
-      r.width, r.height,
+      r2.x - r.x, r2.y - r.y, 
+      r2.x, r2.y,
+      r2.width, r2.height,
       gdk.RGB_DITHER_NONE, 0, 0)
+
+    if (self.show_grid):
+      x_off = (r.x - r2.x) % self.zoom
+      y_off = (r.y - r2.y) % self.zoom
+
+      xmin = r2.x + x_off
+      xmax = r2.x + r.width
+      ymin = r2.y + y_off
+      ymax = r2.y + r.height
+
+      # draw vertical lines
+      for x in range(xmin, xmax, self.zoom):
+        self.window.draw_line(self.gc, x, r.y, x, r.y + r.height)
+
+      for y in range(ymin, ymax, self.zoom):
+        self.window.draw_line(self.gc, r.x, y, r.x + r.width, y)
+
+gobject.type_register(Magnifier)
+
+
