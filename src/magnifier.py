@@ -1,3 +1,4 @@
+import math
 import gobject
 import gtk
 import gtk.gdk as gdk
@@ -78,6 +79,12 @@ class Magnifier(gtk.Widget):
       self.emit("zoom-changed")
       self.scale()
 
+  def set_grab_rate(self, grab_rate):
+    grab_rate = int(grab_rate)
+    if grab_rate <= 0: return
+    if self.grab_rate != grab_rate:
+      self.grab_rate = grab_rate
+
   def cb_grab_timeout(self):
     # repeat time until we've realized the widget
     if self.flags() & gtk.REALIZED == False:
@@ -90,7 +97,7 @@ class Magnifier(gtk.Widget):
     
 
   def grab(self, x, y, w, h):
-    self.grab_rect = gdk.Rectangle(x, y, w, h)
+    self.grab_rect = gdk.Rectangle(int(x), int(y), int(w), int(h))
 
     if (self.grab_timeout == None):
       self.grab_timeout = glib.timeout_add(1000 / self.grab_rate, self.cb_grab_timeout)
