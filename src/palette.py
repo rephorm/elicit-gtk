@@ -30,6 +30,10 @@ class Palette(gobject.GObject):
     self.colors[0:0] = color
     self.emit('changed')
 
+  def remove(self, color):
+    self.colors.remove(color)
+    self.emit('changed')
+
   def load(self, filename):
     self.colors = []
     self.load_errors = []
