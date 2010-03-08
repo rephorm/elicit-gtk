@@ -1,0 +1,14 @@
+A GTK version of Elicit
+Nowhere near complete
+
+
+Before running the first time:
+  $ gconftool-2 --install-schema-file data/elicit.schemas
+
+To run:
+  $ cd src
+  $ python elicit.py
+
+
+
+

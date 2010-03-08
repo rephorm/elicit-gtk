@@ -1,0 +1,77 @@
+<gconfschemafile>
+    <schemalist>
+      <schema>
+        <key>/schemas/apps/elicit/zoom_level</key>
+        <applyto>/apps/elicit/zoom_level</applyto>
+        <owner>elicit</owner>
+        <type>int</type>
+        <default>5</default>
+        <locale name="C">
+          <short>Magnification level</short>
+          <long>The scale factor for the magnifier</long>
+        </locale>
+      </schema>
+
+      <schema>
+        <key>/schemas/apps/elicit/show_grid</key>
+        <applyto>/apps/elicit/show_grid</applyto>
+        <owner>elicit</owner>
+        <type>bool</type>
+        <default>False</default>
+        <locale name="C">
+          <short>Show grid in magnifier?</short>
+          <long>Whether or not to draw a grid over the magnified image showing the boundaries between the original individual pixels.</long>
+        </locale>
+      </schema>
+
+      <schema>
+        <key>/schemas/apps/elicit/grab_rate</key>
+        <applyto>/apps/elicit/grab_rate</applyto>
+        <owner>elicit</owner>
+        <type>int</type>
+        <default>60</default>
+        <locale name="C">
+          <short>How many times to magnify per second.</short>
+          <long>While magnifying, the image is updated every time the mouse moves with a maximum of grab_rate times per second.</long>
+        </locale>
+      </schema>
+
+      <schema>
+        <key>/schemas/apps/elicit/color</key>
+        <applyto>/apps/elicit/color</applyto>
+        <owner>elicit</owner>
+        <type>string</type>
+        <default>#000000</default>
+        <locale name="C">
+          <short>Current color</short>
+          <long>The currently selected color value</long>
+        </locale>
+      </schema>
+
+      <schema>
+        <key>/schemas/apps/elicit/palette</key>
+        <applyto>/apps/elicit/palette</applyto>
+        <owner>elicit</owner>
+        <type>string</type>
+        <default>elicit.gpl</default>
+        <locale name="C">
+          <short>Palette filename</short>
+          <long>The filename of the current palette relative to elicit's palette directory (usually ~/.config/elicit/palette)</long>
+        </locale>
+      </schema>
+
+<!--
+      <schema>
+        <key>/schemas/apps/elicit/</key>
+        <applyto>/apps/elicit/</applyto>
+        <owner>elicit</owner>
+        <type>int</type>
+        <default></default>
+        <locale name="C">
+          <short></short>
+          <long></long>
+        </locale>
+      </schema>
+-->
+    </schemalist>
+</gconfschemafile>
