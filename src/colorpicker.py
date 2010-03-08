@@ -22,6 +22,12 @@ class ColorPicker(gtk.Widget):
     self.picking = 0
     self.pick_timeout = None
 
+  def color_changed(self):
+    r,g,b = self.color.rgb()
+    col = self.gc.get_colormap().alloc_color(r*257,g*257,b*257, False, False)
+    self.gc.set_foreground(col)
+    self.queue_draw()
+
   def pick_immediate(self, x, y):
     if self.flags() & gtk.REALIZED == False: return
 
@@ -40,10 +46,7 @@ class ColorPicker(gtk.Widget):
     self.color.set_rgb(r,g,b)
 
     # update gc
-    col = self.gc.get_colormap().alloc_color(r*257,g*257,b*257, False, False)
-    self.gc.set_foreground(col)
-
-    self.queue_draw()
+    self.color_changed()
 
   def cb_pick_timeout(self):
     # repeat time until we've realized the widget
@@ -107,6 +110,7 @@ class ColorPicker(gtk.Widget):
     self.style.set_background(self.window, gtk.STATE_NORMAL)
     self.window.move_resize(*self.allocation)
     self.gc = self.window.new_gc()
+    self.color_changed()
 
     #XXX install cursor and use config path to load it
     pbuf = gdk.pixbuf_new_from_file("/home/rephorm/graphics/dropper.png")
@@ -127,8 +131,8 @@ class ColorPicker(gtk.Widget):
     self.window.destroy()
 
   def do_size_request(self, requisition):
-    requisition.height = 25
-    requisition.width = 25
+    requisition.height = 40
+    requisition.width = 40
 
   def do_size_allocation(self, allocation):
     if self.flags() & gtk.REALIZED:
