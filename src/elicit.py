@@ -61,6 +61,25 @@ class Elicit:
   def palette_view_delete_color(self, palette_view, color):
     self.palette.remove(color)
 
+  def color_changed(self, color):
+    self.spin_r.set_property('value', self.color.r)
+    self.spin_g.set_property('value', self.color.g)
+    self.spin_b.set_property('value', self.color.b)
+    pass
+
+  def color_spin_changed(self, spin):
+    r,g,b = self.color.rgb()
+    if spin == self.spin_r:
+      r = spin.get_property('value')
+    elif spin == self.spin_g:
+      g = spin.get_property('value')
+    elif spin == self.spin_b:
+      b = spin.get_property('value')
+
+    self.color.set_rgb(r,g,b)
+
+
+
   def build_gui(self):
     self.win = gtk.Window()
     self.win.set_title("Elicit")
@@ -95,13 +114,51 @@ class Elicit:
     hbox.add(spin)
     self.zoom_spin = spin
 
+    hbox = gtk.HBox(False, 5)
+    vbox.add(hbox)
+
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
-    vbox.add(frame)
+    hbox.add(frame)
 
     self.colorpicker = ColorPicker()
     frame.add(self.colorpicker)
     self.colorpicker.connect('save-color', self.picker_save_color)
+
+    table = gtk.Table(3,2)
+    hbox.add(table)
+
+    # add color spinboxes
+    spin = gtk.SpinButton()
+    spin.set_range(0,255)
+    spin.set_increments(1,10)
+    spin.set_property('value', self.color.r)
+    spin.connect('value-changed', self.color_spin_changed)
+    table.attach(spin, 1,2,0,1,gtk.EXPAND|gtk.FILL,gtk.EXPAND,2,2)
+    self.spin_r = spin
+
+    spin = gtk.SpinButton()
+    spin.set_range(0,255)
+    spin.set_increments(1,10)
+    spin.set_property('value', self.color.g)
+    spin.connect('value-changed', self.color_spin_changed)
+    table.attach(spin, 1,2,1,2,gtk.EXPAND|gtk.FILL,gtk.EXPAND,2,2)
+    self.spin_g = spin
+
+    spin = gtk.SpinButton()
+    spin.set_range(0,255)
+    spin.set_increments(1,10)
+    spin.set_property('value', self.color.b)
+    spin.connect('value-changed', self.color_spin_changed)
+    table.attach(spin, 1,2,2,3,gtk.EXPAND|gtk.FILL,gtk.EXPAND,2,2)
+    self.spin_b = spin
+
+    label = gtk.Label("R")
+    table.attach(label, 0,1,0,1,0,0,2,2)
+    label = gtk.Label("G")
+    table.attach(label, 0,1,1,2,0,0,2,2)
+    label = gtk.Label("B")
+    table.attach(label, 0,1,2,3,0,0,2,2)
 
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
@@ -158,6 +215,7 @@ class Elicit:
   def __init__(self):
     self.palette = Palette()
     self.color = Color()
+    self.color.connect('changed', self.color_changed)
     self.build_gui()
 
     self.palette_view.set_palette(self.palette)
