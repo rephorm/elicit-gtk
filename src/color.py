@@ -24,6 +24,10 @@ class Color(gobject.GObject):
     if (min(r,g,b) < 0 or max(r,g,b) > 255):
       raise ValueError("Values must be between 0 and 255")
 
+    r = int(r)
+    g = int(g)
+    b = int(b)
+
     if self.r == r and self.g == g and self.b == b: return
 
     self.r, self.g, self.b = r, g, b
