@@ -22,9 +22,15 @@ class ColorPicker(gtk.Widget):
     self.picking = 0
     self.pick_timeout = None
 
-  def color_changed(self):
-    r,g,b = self.color.rgb()
-    col = self.gc.get_colormap().alloc_color(r*257,g*257,b*257, False, False)
+  def set_color(self, color):
+    self.color = color
+    self.color.connect('changed', self.color_changed)
+
+  def color_changed(self, color):
+    if not self.flags() & gtk.REALIZED: return
+
+    r,g,b = self.color.rgb16()
+    col = self.gc.get_colormap().alloc_color(r, g, b, False, False)
     self.gc.set_foreground(col)
     self.queue_draw()
 
@@ -44,9 +50,6 @@ class ColorPicker(gtk.Widget):
     #    all subsequent times are fine. why?
     r,g,b = self.raw_pixbuf.get_pixels_array()[0,0]
     self.color.set_rgb(r,g,b)
-
-    # update gc
-    self.color_changed()
 
   def cb_pick_timeout(self):
     # repeat time until we've realized the widget
@@ -110,7 +113,7 @@ class ColorPicker(gtk.Widget):
     self.style.set_background(self.window, gtk.STATE_NORMAL)
     self.window.move_resize(*self.allocation)
     self.gc = self.window.new_gc()
-    self.color_changed()
+    self.color_changed(self.color)
 
     #XXX install cursor and use config path to load it
     pbuf = gdk.pixbuf_new_from_file("../data/dropper.png")

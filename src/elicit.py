@@ -5,7 +5,6 @@ import glib
 import pygtk
 import gconf
 import os
-import copy
 
 import xdg.BaseDirectory as base
 
@@ -52,7 +51,9 @@ class Elicit:
     self.gconf.set_int('/apps/elicit/zoom_level', int(spin.get_property('value')))
 
   def picker_save_color(self, picker):
-    self.palette.append(copy.copy(picker.color))
+    c = Color()
+    c.set_rgb(*picker.color.rgb())
+    self.palette.append(c)
 
   def palette_view_select_color(self, palette_view, color):
     self.gconf.set_string('/apps/elicit/color', color.hex())
@@ -141,8 +142,6 @@ class Elicit:
     if key == 'color':
       hex = entry.value.get_string()
       self.color.set_hex(hex)
-      print(hex, self.color.rgb())
-      self.colorpicker.color_changed() #XXX this should be a signal
     elif key == 'zoom_level':
       self.mag.set_zoom(entry.value.get_int())
       self.zoom_spin.set_property('value', self.mag.zoom)
@@ -162,7 +161,7 @@ class Elicit:
     self.build_gui()
 
     self.palette_view.set_palette(self.palette)
-    self.colorpicker.color = self.color
+    self.colorpicker.set_color(self.color)
 
     self.palette_dir = os.path.join(base.save_config_path(self.appname), 'palettes')
 

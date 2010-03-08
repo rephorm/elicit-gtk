@@ -1,9 +1,16 @@
-class Color:
+import gobject
+
+class Color(gobject.GObject):
+  __gsignals__ = {
+      'changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ())
+      }
+
   UNSET = 0
   RGB = 1
   HSV = 2
 
   def __init__(self):
+    super(Color,self).__init__()
     self.type = self.UNSET
     self.name = "Unnamed"
     self.r = self.g = self.b = 0
@@ -16,16 +23,24 @@ class Color:
   def set_rgb(self, r, g, b):
     if (min(r,g,b) < 0 or max(r,g,b) > 255):
       raise ValueError("Values must be between 0 and 255")
+
+    if self.r == r and self.g == g and self.b == b: return
+
     self.r, self.g, self.b = r, g, b
     self.type = Color.RGB
     self.rgb_to_hsv()
+    self.emit('changed')
 
   def set_hsv(self, h, s, v):
     if (min(r,g,b) < 0 or max(r,g,b) > 255):
       raise ValueError("Values must be between 0 and 255")
+
+    if self.h == h and self.s == s and self.v == v: return
+
     self.h, self.s, self.v = h, s, v
     self.type = Color.HSV
     self.hsv_to_rgb()
+    self.emit('changed')
 
   def set_hex(self, hex):
     tmp = hex
@@ -39,6 +54,9 @@ class Color:
 
   def rgb(self):
     return (self.r, self.g, self.b)
+
+  def rgb16(self):
+    return (self.r * 257, self.g * 257, self.b * 257)
 
   def hsv(self):
     return (self.h, self.s, self.v)
@@ -97,3 +115,5 @@ class Color:
       self.r, self.g, self.b = t, p, v
     elif i == 5:
       self.r, self.g, self.b = v, p, q
+
+gobject.type_register(Color)
