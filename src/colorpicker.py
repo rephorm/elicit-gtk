@@ -12,6 +12,7 @@ if gtk.pygtk_version < (2,0):
 
 class ColorPicker(gtk.Widget):
   __gsignals__ = {
+      'save-color': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ())
   }
 
   def __init__(self):
@@ -63,6 +64,8 @@ class ColorPicker(gtk.Widget):
   def cb_button_press(self, widget, event):
     if (event.button == 1):
       self.picking = True
+    if (event.button == 3):
+      self.emit('save-color')
 
   def cb_button_release(self, widget, event):
     if (event.button == 1):
