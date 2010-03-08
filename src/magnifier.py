@@ -26,8 +26,14 @@ class Magnifier(gtk.Widget):
     self.grabbing = False
     self.has_data = False
 
+    self.panning = False
+    self.pan_x = 0
+    self.pan_y = 0
+
   def grab_immediate(self, x, y, w, h):
     self.screen_rect = gdk.Rectangle(x, y, w, h)
+    self.pan_x = 0
+    self.pan_y = 0
 
     # if we're grabbing a different size, create new pixbuf of correct size
     if (self.screen_rect.width != self.raw_width or self.screen_rect.height != self.raw_height):
@@ -79,6 +85,28 @@ class Magnifier(gtk.Widget):
       self.emit("zoom-changed")
       self.scale()
 
+  def pan(self, pan_x, pan_y):
+    xmax = (self.pixbuf_width - self.allocation.width) / 2
+    ymax = (self.pixbuf_height - self.allocation.height) / 2
+
+    if xmax > 0:
+      if pan_x > 0 and pan_x > xmax: pan_x = xmax
+      if pan_x < 0 and pan_x < -xmax: pan_x = -xmax
+    else:
+      pan_x = 0
+
+    if ymax > 0:
+      if pan_y > 0 and pan_y > ymax: pan_y = ymax
+      if pan_y < 0 and pan_y < -ymax: pan_y = -ymax
+    else:
+      pan_y = 0
+
+    if self.pan_x == pan_x and self.pan_y == pan_y: return
+
+    self.pan_x = pan_x
+    self.pan_y = pan_y
+    self.queue_draw()
+
   def set_grab_rate(self, grab_rate):
     grab_rate = int(grab_rate)
     if grab_rate <= 0: return
@@ -103,24 +131,47 @@ class Magnifier(gtk.Widget):
       self.grab_timeout = glib.timeout_add(1000 / self.grab_rate, self.cb_grab_timeout)
 
   def cb_button_press(self, widget, event):
-    if (event.button == 1):
+    if event.button == 1:
       self.grabbing = True
+    elif event.button == 2:
+      self.panning = True
+      self.pan_start_x = event.x - self.pan_x
+      self.pan_start_y = event.y - self.pan_y
 
   def cb_scroll(self, widget, event):
-    zoom = self.zoom
+    old_zoom = zoom = self.zoom
+
     if (event.direction == gdk.SCROLL_UP):
       zoom += 1
     elif (event.direction == gdk.SCROLL_DOWN):
       zoom -= 1
 
+    # find origin of image
+    x0 = (self.allocation.width - self.pixbuf_width)/2 + self.pan_x
+    y0 = (self.allocation.height - self.pixbuf_height)/2 + self.pan_y
+    # find offset from clicked pixel to origin
+    dx = event.x - x0
+    dy = event.y - y0
+
     self.set_zoom(zoom)
 
+    # find new origin, assuming no pan
+    x0 = (self.allocation.width - self.pixbuf_width)/2
+    y0 = (self.allocation.width - self.pixbuf_width)/2
+
+    # place new location of pixel clicked under mouse
+    pan_x = event.x - (dx * zoom / old_zoom + x0)
+    pan_y = event.y - (dy * zoom / old_zoom + y0)
+    self.pan(pan_x, pan_y)
+
   def cb_button_release(self, widget, event):
-    if (event.button == 1):
+    if event.button == 1:
       self.grabbing = False
+    elif event.button == 2:
+      self.panning = False
 
   def cb_motion_notify(self, widget, event):
-    if (self.grabbing):
+    if self.grabbing:
       root_w, root_h = gdk.get_default_root_window().get_size()
       w = int(math.ceil(float(self.allocation.width) / self.zoom))
       h = int(math.ceil(float(self.allocation.height) / self.zoom))
@@ -133,6 +184,12 @@ class Magnifier(gtk.Widget):
       if (y > root_h - h): y = root_h - h
 
       self.grab(x, y, w, h)
+
+    elif self.panning:
+      pan_x = int(event.x - self.pan_start_x)
+      pan_y = int(event.y - self.pan_start_y)
+
+      self.pan(pan_x, pan_y)
 
   def do_realize(self):
     self.set_flags(self.flags() | gtk.REALIZED)
@@ -187,8 +244,8 @@ class Magnifier(gtk.Widget):
 
     # center image in given space
     r = gdk.Rectangle(
-      int((self.allocation.width - self.pixbuf_width) / 2),
-      int((self.allocation.height - self.pixbuf_height) / 2),
+      int((self.allocation.width - self.pixbuf_width) / 2) + self.pan_x,
+      int((self.allocation.height - self.pixbuf_height) / 2) + self.pan_y,
       self.pixbuf_width,
       self.pixbuf_height)
 
