@@ -3,6 +3,7 @@ import gtk
 import gtk.gdk as gdk
 import glib
 import pygtk
+import gconf
 import os
 
 import xdg.BaseDirectory as base
@@ -21,7 +22,7 @@ class Elicit:
   appname = 'elicit'
 
   def quit(self, widget, data=None):
-    self.save_config()
+    self.palette.save()
     gtk.main_quit()
 
   def main(self):
@@ -40,48 +41,13 @@ class Elicit:
     self.grid_check.set_property('active', mag.show_grid)
 
   def mag_zoom_changed(self, mag):
-    self.zoom_spin.set_property('value', mag.zoom)
+    self.gconf.set_int('/apps/elicit/zoom_level', mag.zoom)
 
   def grid_check_toggled(self, check):
-    self.mag.set_show_grid(check.get_property('active'))
+    self.gconf.set_bool('/apps/elicit/show_grid', check.get_property('active'))
 
   def zoom_spin_value_changed(self, spin):
-    self.mag.set_zoom(spin.get_property('value'))
-
-  def load_config(self):
-    self.conf = {
-        'palette_columns': 1,
-        'zoom_level': 6,
-        'grab_rate': 60,
-        'show_grid': 1,
-        'palette': None,
-        'color': '#000000'
-      }
-
-    for path in base.load_config_paths(self.appname):
-      file = os.path.join(path, 'elicit.cfg')
-      if os.path.exists(file):
-        with open(file) as f:
-          for line in f:
-            if line[0] == '#' or line[0] == '\n':
-              continue
-            key,val = line.split(':')
-            self.conf[key.strip()] = val.strip()
-        return
-
-  def save_config(self):
-    self.conf['zoom_level'] = self.mag.zoom
-    self.conf['show_grid'] = self.mag.show_grid
-    self.conf['grab_rate'] = self.mag.grab_rate
-    self.conf['palette'] = self.palette.filename
-    self.conf['color'] = self.color.hex
-
-    path = base.save_config_path(self.appname)
-    file = os.path.join(path, 'elicit.cfg')
-
-    with open(file, 'w') as f:
-      for key in self.conf:
-        f.write("%s: %s\n" % (key, self.conf[key]))
+    self.gconf.set_int('/apps/elicit/zoom_level', int(spin.get_property('value')))
 
   def build_gui(self):
     self.win = gtk.Window()
@@ -124,27 +90,58 @@ class Elicit:
     self.colorpicker = ColorPicker()
     frame.add(self.colorpicker)
 
+  def init_config(self):
+    self.gconf = gconf.client_get_default()
+    self.gconf.add_dir('/apps/elicit', preload=True)
+    self.gconf_id = self.gconf.notify_add("/apps/elicit", self.config_changed)
+
+    color = self.gconf.get_string('/apps/elicit/color')
+    if color: self.color.set_hex(color)
+
+    zoom_level = self.gconf.get_int('/apps/elicit/zoom_level')
+    self.mag.set_zoom(zoom_level)
+    self.zoom_spin.set_property('value', self.mag.zoom)
+
+    grab_rate = self.gconf.get_int('/apps/elicit/grab_rate')
+    if grab_rate > 0: self.mag.grab_rate = grab_rate
+
+    show_grid = self.gconf.get_bool('/apps/elicit/show_grid')
+    self.mag.set_show_grid(show_grid)
+    self.grid_check.set_property('active', self.mag.show_grid)
+
+    palette = self.gconf.get_string('/apps/elicit/palette')
+    if not palette: palette = 'elicit.gpl'
+
+    self.palette.load(os.path.join(self.palette_dir, palette))
+
+  def config_changed(self, client, gconf_id, entry, user_data):
+    key = entry.key[13:]
+
+    if key == 'color':
+      self.color.set_hex(entry.value.get_string())
+    elif key == 'zoom_level':
+      self.mag.set_zoom(entry.value.get_int())
+      self.zoom_spin.set_property('value', self.mag.zoom)
+    elif key == 'show_grid':
+      self.mag.set_show_grid(entry.value.get_bool())
+      self.grid_check.set_property('active', self.mag.show_grid)
+    elif key == 'palette':
+      palette = entry.value.get_string()
+      if not palette: palette = 'elicit.gpl'
+      self.palette.load(os.path.join(self.palette_dir, palette))
+    elif key == 'grab_rate':
+      self.mag.set_grab_rate(entry.value.get_int())
+
   def __init__(self):
     self.palette = Palette()
     self.color = Color()
     self.build_gui()
 
-    self.load_config()
+    self.palette_dir = os.path.join(base.save_config_path(self.appname), 'palettes')
 
-    #XXX do this in load_config?
-    if (self.conf['color']):
-      self.color.set_hex(self.conf['color'])
-    if (self.conf['zoom_level']):
-      self.mag.set_zoom(int(self.conf['zoom_level']))
-    if (self.conf['show_grid']):
-      self.mag.set_show_grid(int(self.conf['show_grid']))
-    if (self.conf['grab_rate']):
-      self.mag.grab_rate = int(self.conf['grab_rate'])
-    if (self.conf['palette']):
-      path = os.path.join(base.save_config_dir(), 'palettes', self.conf['palette'])
-      self.palette.load(path)
-    else:
-      self.palette.filename = 'elicit.gpl'
+    self.init_config()
+    #self.load_config()
+    #self.palette.load(path)
 
 if __name__ == "__main__":
   el = Elicit();
