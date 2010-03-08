@@ -22,8 +22,7 @@ class ColorPicker(gtk.Widget):
     self.pick_timeout = None
 
   def pick_immediate(self, x, y):
-    if self.flags() & gtk.REALIZED == False:
-      return
+    if self.flags() & gtk.REALIZED == False: return
 
     # grab raw screen data
     self.raw_pixbuf.get_from_drawable(
@@ -34,8 +33,9 @@ class ColorPicker(gtk.Widget):
         self.raw_width, self.raw_height)
 
     #pull out rgb value
-    pixels = self.raw_pixbuf.get_pixels_array()
-    r,g,b = pixels[0,0]
+    #XXX first time this is called generates a warning and doesn't work.
+    #    all subsequent times are fine. why?
+    r,g,b = self.raw_pixbuf.get_pixels_array()[0,0]
     self.color.set_rgb(r,g,b)
 
     # update gc
@@ -55,7 +55,7 @@ class ColorPicker(gtk.Widget):
     return False
 
   def pick(self, x, y):
-    self.pick_x, self.pick_y = x, y
+    self.pick_x, self.pick_y = int(x), int(y)
 
     if (self.pick_timeout == None):
       self.pick_timeout = glib.timeout_add(1000 / self.pick_rate, self.cb_pick_timeout)
