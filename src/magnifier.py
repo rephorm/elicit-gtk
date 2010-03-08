@@ -210,7 +210,7 @@ class Magnifier(gtk.Widget):
 
 
     #XXX install cursor and use config path to load it
-    pbuf = gdk.pixbuf_new_from_file("/home/rephorm/graphics/magnify.png")
+    pbuf = gdk.pixbuf_new_from_file("../data/magnify.png")
     if pbuf:
       self.cursor = gdk.Cursor(self.window.get_display(), pbuf, 6, 6);
       self.window.set_cursor(self.cursor)

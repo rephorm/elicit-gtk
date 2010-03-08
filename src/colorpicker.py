@@ -113,7 +113,7 @@ class ColorPicker(gtk.Widget):
     self.color_changed()
 
     #XXX install cursor and use config path to load it
-    pbuf = gdk.pixbuf_new_from_file("/home/rephorm/graphics/dropper.png")
+    pbuf = gdk.pixbuf_new_from_file("../data/dropper.png")
     if pbuf:
       self.cursor = gdk.Cursor(self.window.get_display(), pbuf, 8, 21);
       self.window.set_cursor(self.cursor)
