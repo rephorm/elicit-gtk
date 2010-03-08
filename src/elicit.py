@@ -5,6 +5,7 @@ import glib
 import pygtk
 import gconf
 import os
+import copy
 
 import xdg.BaseDirectory as base
 
@@ -13,6 +14,7 @@ from colorpicker import ColorPicker
 
 from palette import Palette
 from color import Color
+from palette_view import PaletteView
 
 if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
@@ -49,6 +51,9 @@ class Elicit:
   def zoom_spin_value_changed(self, spin):
     self.gconf.set_int('/apps/elicit/zoom_level', int(spin.get_property('value')))
 
+  def picker_save_color(self, picker):
+    self.palette.append(copy.copy(picker.color))
+
   def build_gui(self):
     self.win = gtk.Window()
     self.win.set_title("Elicit")
@@ -58,7 +63,7 @@ class Elicit:
     self.win.add(vbox)
 
     frame = gtk.Frame()
-    frame.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+    frame.set_shadow_type(gtk.SHADOW_IN)
     vbox.add(frame)
 
     self.mag = Magnifier()
@@ -84,11 +89,19 @@ class Elicit:
     self.zoom_spin = spin
 
     frame = gtk.Frame()
-    frame.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+    frame.set_shadow_type(gtk.SHADOW_IN)
     vbox.add(frame)
 
     self.colorpicker = ColorPicker()
     frame.add(self.colorpicker)
+    self.colorpicker.connect('save-color', self.picker_save_color)
+
+    frame = gtk.Frame()
+    frame.set_shadow_type(gtk.SHADOW_IN)
+    vbox.add(frame)
+
+    self.palette_view = PaletteView()
+    frame.add(self.palette_view)
 
   def init_config(self):
     self.gconf = gconf.client_get_default()
@@ -136,6 +149,8 @@ class Elicit:
     self.palette = Palette()
     self.color = Color()
     self.build_gui()
+
+    self.palette_view.set_palette(self.palette)
 
     self.palette_dir = os.path.join(base.save_config_path(self.appname), 'palettes')
 
