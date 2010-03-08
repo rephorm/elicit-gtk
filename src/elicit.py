@@ -54,6 +54,12 @@ class Elicit:
   def picker_save_color(self, picker):
     self.palette.append(copy.copy(picker.color))
 
+  def palette_view_select_color(self, palette_view, color):
+    self.gconf.set_string('/apps/elicit/color', color.hex())
+
+  def palette_view_delete_color(self, palette_view, color):
+    self.palette.remove(color)
+
   def build_gui(self):
     self.win = gtk.Window()
     self.win.set_title("Elicit")
@@ -101,6 +107,8 @@ class Elicit:
     vbox.add(frame)
 
     self.palette_view = PaletteView()
+    self.palette_view.connect('select-color', self.palette_view_select_color)
+    self.palette_view.connect('delete-color', self.palette_view_delete_color)
     frame.add(self.palette_view)
 
   def init_config(self):
@@ -131,7 +139,10 @@ class Elicit:
     key = entry.key[13:]
 
     if key == 'color':
-      self.color.set_hex(entry.value.get_string())
+      hex = entry.value.get_string()
+      self.color.set_hex(hex)
+      print(hex, self.color.rgb())
+      self.colorpicker.color_changed() #XXX this should be a signal
     elif key == 'zoom_level':
       self.mag.set_zoom(entry.value.get_int())
       self.zoom_spin.set_property('value', self.mag.zoom)
@@ -151,6 +162,7 @@ class Elicit:
     self.build_gui()
 
     self.palette_view.set_palette(self.palette)
+    self.colorpicker.color = self.color
 
     self.palette_dir = os.path.join(base.save_config_path(self.appname), 'palettes')
 
