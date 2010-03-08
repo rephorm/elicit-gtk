@@ -105,6 +105,13 @@ class ColorPicker(gtk.Widget):
     self.window.move_resize(*self.allocation)
     self.gc = self.window.new_gc()
 
+    #XXX install cursor and use config path to load it
+    pbuf = gdk.pixbuf_new_from_file("/home/rephorm/graphics/dropper.png")
+    if pbuf:
+      self.cursor = gdk.Cursor(self.window.get_display(), pbuf, 8, 21);
+      self.window.set_cursor(self.cursor)
+
+
     self.connect("motion-notify-event", self.cb_motion_notify)
     self.connect("button-press-event", self.cb_button_press)
     self.connect("button-release-event", self.cb_button_release)

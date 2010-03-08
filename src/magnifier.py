@@ -209,6 +209,12 @@ class Magnifier(gtk.Widget):
           | gdk.POINTER_MOTION_HINT_MASK)
 
 
+    #XXX install cursor and use config path to load it
+    pbuf = gdk.pixbuf_new_from_file("/home/rephorm/graphics/magnify.png")
+    if pbuf:
+      self.cursor = gdk.Cursor(self.window.get_display(), pbuf, 6, 6);
+      self.window.set_cursor(self.cursor)
+
     self.pixbuf_width = self.allocation.width;
     self.pixbuf_height = self.allocation.height;
     self.raw_width = int(self.allocation.width / self.zoom);
