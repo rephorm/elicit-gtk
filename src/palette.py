@@ -1,8 +1,13 @@
+import gobject
 from color import Color
 import os
 
-class Palette:
+class Palette(gobject.GObject):
+  __gsignals__ = {
+    'changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ())
+    }
   def __init__(self):
+    super(Palette, self).__init__()
     self.name = "Untitled Palette"
     self.columns = 0
     self.filename = None
@@ -11,15 +16,19 @@ class Palette:
 
   def append(self, color):
     self.colors.append(color)
+    self.emit('changed')
 
   def insert_before(self, color, after):
     self.colors.insert(s.index(after), color)
+    self.emit('changed')
 
   def insert_after(self, color, after):
     self.colors.insert(s.index(after) + 1, color)
+    self.emit('changed')
 
   def prepend(self, color):
     self.colors[0:0] = color
+    self.emit('changed')
 
   def load(self, filename):
     self.colors = []
@@ -81,3 +90,4 @@ class Palette:
       for c in self.colors:
         f.write("%3d %3d %3d\t%s\n" % (c.r, c.g, c.b, c.name))
 
+gobject.type_register(Palette)
