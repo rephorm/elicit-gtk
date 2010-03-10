@@ -238,8 +238,8 @@ class Magnifier(gtk.Widget):
     self.window.destroy()
 
   def do_size_request(self, requisition):
-    requisition.height = 250
-    requisition.width = 250
+    requisition.height = 200
+    requisition.width = 220
 
   def do_size_allocation(self, allocation):
     if self.flags() & gtk.REALIZED:
