@@ -86,6 +86,8 @@ class Magnifier(gtk.Widget):
       self.scale()
 
   def pan(self, pan_x, pan_y):
+    pan_x = int(pan_x)
+    pan_y = int(pan_y)
     xmax = (self.pixbuf_width - self.allocation.width) / 2
     ymax = (self.pixbuf_height - self.allocation.height) / 2
 
@@ -215,8 +217,8 @@ class Magnifier(gtk.Widget):
       self.cursor = gdk.Cursor(self.window.get_display(), pbuf, 6, 6);
       self.window.set_cursor(self.cursor)
 
-    self.pixbuf_width = self.allocation.width;
-    self.pixbuf_height = self.allocation.height;
+    self.pixbuf_width = int(self.allocation.width);
+    self.pixbuf_height = int(self.allocation.height);
     self.raw_width = int(self.allocation.width / self.zoom);
     self.raw_height = int(self.allocation.height / self.zoom);
 
@@ -250,8 +252,8 @@ class Magnifier(gtk.Widget):
 
     # center image in given space
     r = gdk.Rectangle(
-      int((self.allocation.width - self.pixbuf_width) / 2) + self.pan_x,
-      int((self.allocation.height - self.pixbuf_height) / 2) + self.pan_y,
+      int((self.allocation.width - self.pixbuf_width) / 2 + self.pan_x),
+      int((self.allocation.height - self.pixbuf_height) / 2 + self.pan_y),
       self.pixbuf_width,
       self.pixbuf_height)
 
