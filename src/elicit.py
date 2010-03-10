@@ -19,6 +19,7 @@ if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
   raise SystemExit
 
+
 class Elicit:
   appname = 'elicit'
 
@@ -39,16 +40,16 @@ class Elicit:
     self.mag.grab(x,y,w,h)
 
   def mag_grid_toggled(self, mag):
-    self.grid_check.set_property('active', mag.show_grid)
+    self.grid_check.set_active(mag.show_grid)
 
   def mag_zoom_changed(self, mag):
     self.gconf.set_int('/apps/elicit/zoom_level', mag.zoom)
 
   def grid_check_toggled(self, check):
-    self.gconf.set_bool('/apps/elicit/show_grid', check.get_property('active'))
+    self.gconf.set_bool('/apps/elicit/show_grid', check.get_active())
 
   def zoom_spin_value_changed(self, spin):
-    self.gconf.set_int('/apps/elicit/zoom_level', int(spin.get_property('value')))
+    self.gconf.set_int('/apps/elicit/zoom_level', int(spin.get_value()))
 
   def picker_save_color(self, picker):
     c = Color()
@@ -62,22 +63,33 @@ class Elicit:
     self.palette.remove(color)
 
   def color_changed(self, color):
-    self.spin_r.set_property('value', self.color.r)
-    self.spin_g.set_property('value', self.color.g)
-    self.spin_b.set_property('value', self.color.b)
+    self.colorspin['r'].set_value(self.color.r)
+    self.colorspin['g'].set_value(self.color.g)
+    self.colorspin['b'].set_value(self.color.b)
+    self.colorspin['h'].set_value(self.color.h)
+    self.colorspin['s'].set_value(self.color.s)
+    self.colorspin['v'].set_value(self.color.v)
     pass
 
-  def color_spin_changed(self, spin):
+  def color_spin_rgb_changed(self, spin):
     r,g,b = self.color.rgb()
-    if spin == self.spin_r:
-      r = spin.get_property('value')
-    elif spin == self.spin_g:
-      g = spin.get_property('value')
-    elif spin == self.spin_b:
-      b = spin.get_property('value')
-
+    if spin == self.colorspin['r']:
+      r = spin.get_value()
+    elif spin == self.colorspin['g']:
+      g = spin.get_value()
+    elif spin == self.colorspin['b']:
+      b = spin.get_value()
     self.color.set_rgb(r,g,b)
 
+  def color_spin_hsv_changed(self, spin):
+    h,s,v = self.color.hsv()
+    if spin == self.colorspin['h']:
+      h = spin.get_value()
+    elif spin == self.colorspin['s']:
+      s = spin.get_value()
+    elif spin == self.colorspin['v']:
+      v = spin.get_value()
+    self.color.set_hsv(h,s,v)
 
 
   def build_gui(self):
@@ -101,7 +113,7 @@ class Elicit:
     vbox.add(hbox)
 
     check = gtk.CheckButton("Show Grid")
-    check.set_property('active', self.mag.show_grid)
+    check.set_active(self.mag.show_grid)
     check.connect('toggled', self.grid_check_toggled)
     hbox.add(check)
     self.grid_check = check
@@ -109,7 +121,7 @@ class Elicit:
     spin = gtk.SpinButton()
     spin.set_range(1,50)
     spin.set_increments(1,10)
-    spin.set_property('value', self.mag.zoom)
+    spin.set_value(self.mag.zoom)
     spin.connect('value-changed', self.zoom_spin_value_changed)
     hbox.add(spin)
     self.zoom_spin = spin
@@ -125,40 +137,43 @@ class Elicit:
     frame.add(self.colorpicker)
     self.colorpicker.connect('save-color', self.picker_save_color)
 
+    self.colorspin = {}
+    # add RGB spinboxes
     table = gtk.Table(3,2)
     hbox.add(table)
 
-    # add color spinboxes
-    spin = gtk.SpinButton()
-    spin.set_range(0,255)
-    spin.set_increments(1,10)
-    spin.set_property('value', self.color.r)
-    spin.connect('value-changed', self.color_spin_changed)
-    table.attach(spin, 1,2,0,1,gtk.EXPAND|gtk.FILL,gtk.EXPAND,2,2)
-    self.spin_r = spin
+    row = 0
+    for type in ("r","g","b"):
+      label = gtk.Label(type.upper())
+      table.attach(label, 0,1,row,row+1,0,0,2,2)
+      spin = gtk.SpinButton()
+      spin.set_range(0,255)
+      spin.set_increments(1,10)
+      spin.connect('value-changed', self.color_spin_rgb_changed)
+      table.attach(spin, 1,2,row,row+1,gtk.EXPAND|gtk.FILL,gtk.EXPAND,2,2)
+      self.colorspin[type] = spin
+      row += 1
 
-    spin = gtk.SpinButton()
-    spin.set_range(0,255)
-    spin.set_increments(1,10)
-    spin.set_property('value', self.color.g)
-    spin.connect('value-changed', self.color_spin_changed)
-    table.attach(spin, 1,2,1,2,gtk.EXPAND|gtk.FILL,gtk.EXPAND,2,2)
-    self.spin_g = spin
+    # add HSV spinboxes
+    table = gtk.Table(3,2)
+    hbox.add(table)
 
-    spin = gtk.SpinButton()
-    spin.set_range(0,255)
-    spin.set_increments(1,10)
-    spin.set_property('value', self.color.b)
-    spin.connect('value-changed', self.color_spin_changed)
-    table.attach(spin, 1,2,2,3,gtk.EXPAND|gtk.FILL,gtk.EXPAND,2,2)
-    self.spin_b = spin
-
-    label = gtk.Label("R")
-    table.attach(label, 0,1,0,1,0,0,2,2)
-    label = gtk.Label("G")
-    table.attach(label, 0,1,1,2,0,0,2,2)
-    label = gtk.Label("B")
-    table.attach(label, 0,1,2,3,0,0,2,2)
+    row = 0
+    for type in ("h","s","v"):
+      label = gtk.Label(type.upper())
+      table.attach(label, 0,1,row,row+1,0,0,2,2)
+      spin = gtk.SpinButton()
+      if type == 'h':
+        spin.set_range(0,360)
+        spin.set_increments(1,10)
+      else:
+        spin.set_digits(2)
+        spin.set_range(0,1.0)
+        spin.set_increments(.01,.1)
+      spin.connect('value-changed', self.color_spin_hsv_changed)
+      table.attach(spin, 1,2,row,row+1,gtk.EXPAND|gtk.FILL,gtk.EXPAND,2,2)
+      self.colorspin[type] = spin
+      row += 1
 
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
@@ -179,14 +194,14 @@ class Elicit:
 
     zoom_level = self.gconf.get_int('/apps/elicit/zoom_level')
     self.mag.set_zoom(zoom_level)
-    self.zoom_spin.set_property('value', self.mag.zoom)
+    self.zoom_spin.set_value(self.mag.zoom)
 
     grab_rate = self.gconf.get_int('/apps/elicit/grab_rate')
     if grab_rate > 0: self.mag.grab_rate = grab_rate
 
     show_grid = self.gconf.get_bool('/apps/elicit/show_grid')
     self.mag.set_show_grid(show_grid)
-    self.grid_check.set_property('active', self.mag.show_grid)
+    self.grid_check.set_active(self.mag.show_grid)
 
     palette = self.gconf.get_string('/apps/elicit/palette')
     if not palette: palette = 'elicit.gpl'
@@ -201,10 +216,10 @@ class Elicit:
       self.color.set_hex(hex)
     elif key == 'zoom_level':
       self.mag.set_zoom(entry.value.get_int())
-      self.zoom_spin.set_property('value', self.mag.zoom)
+      self.zoom_spin.set_value(self.mag.zoom)
     elif key == 'show_grid':
       self.mag.set_show_grid(entry.value.get_bool())
-      self.grid_check.set_property('active', self.mag.show_grid)
+      self.grid_check.set_active(self.mag.show_grid)
     elif key == 'palette':
       palette = entry.value.get_string()
       if not palette: palette = 'elicit.gpl'
