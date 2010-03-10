@@ -102,7 +102,7 @@ class Elicit:
 
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
-    vbox.add(frame)
+    vbox.pack_start(frame, True, True)
 
     self.mag = Magnifier()
     frame.add(self.mag)
@@ -110,12 +110,12 @@ class Elicit:
     self.mag.connect('grid-toggled', self.mag_grid_toggled)
 
     hbox = gtk.HBox(False, 5)
-    vbox.add(hbox)
+    vbox.pack_start(hbox, False)
 
     check = gtk.CheckButton("Show Grid")
     check.set_active(self.mag.show_grid)
     check.connect('toggled', self.grid_check_toggled)
-    hbox.add(check)
+    hbox.pack_start(check)
     self.grid_check = check
 
     spin = gtk.SpinButton()
@@ -123,15 +123,19 @@ class Elicit:
     spin.set_increments(1,10)
     spin.set_value(self.mag.zoom)
     spin.connect('value-changed', self.zoom_spin_value_changed)
-    hbox.add(spin)
+    hbox.pack_end(spin, False)
     self.zoom_spin = spin
 
+    zoom_label = gtk.Label("Zoom:")
+    hbox.pack_end(zoom_label, False)
+
+
     hbox = gtk.HBox(False, 5)
-    vbox.add(hbox)
+    vbox.pack_start(hbox, False)
 
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
-    hbox.add(frame)
+    hbox.pack_start(frame, True, True)
 
     self.colorpicker = ColorPicker()
     frame.add(self.colorpicker)
@@ -139,8 +143,8 @@ class Elicit:
 
     self.colorspin = {}
     # add RGB spinboxes
-    table = gtk.Table(3,2)
-    hbox.add(table)
+    table = gtk.Table(3,4)
+    hbox.pack_start(table, False)
 
     row = 0
     for type in ("r","g","b"):
@@ -150,18 +154,19 @@ class Elicit:
       spin.set_range(0,255)
       spin.set_increments(1,10)
       spin.connect('value-changed', self.color_spin_rgb_changed)
-      table.attach(spin, 1,2,row,row+1,gtk.EXPAND|gtk.FILL,gtk.EXPAND,2,2)
+      table.attach(spin, 1,2,row,row+1,gtk.FILL,gtk.EXPAND,2,2)
       self.colorspin[type] = spin
       row += 1
 
     # add HSV spinboxes
     table = gtk.Table(3,2)
-    hbox.add(table)
+    hbox.pack_start(table, False)
 
     row = 0
+    col = 2
     for type in ("h","s","v"):
       label = gtk.Label(type.upper())
-      table.attach(label, 0,1,row,row+1,0,0,2,2)
+      table.attach(label, 2,3,row,row+1,0,0,2,2)
       spin = gtk.SpinButton()
       if type == 'h':
         spin.set_range(0,360)
@@ -171,13 +176,13 @@ class Elicit:
         spin.set_range(0,1.0)
         spin.set_increments(.01,.1)
       spin.connect('value-changed', self.color_spin_hsv_changed)
-      table.attach(spin, 1,2,row,row+1,gtk.EXPAND|gtk.FILL,gtk.EXPAND,2,2)
+      table.attach(spin, 3,4,row,row+1,gtk.FILL,gtk.EXPAND,2,2)
       self.colorspin[type] = spin
       row += 1
 
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
-    vbox.add(frame)
+    vbox.pack_start(frame, False)
 
     self.palette_view = PaletteView()
     self.palette_view.connect('select-color', self.palette_view_select_color)
