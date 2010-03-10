@@ -23,6 +23,8 @@ class PaletteView(gtk.Widget):
 
     self.pan = 0
 
+    self.selected = None
+
   def color_at(self, x, y):
     if self.direction == self.HORIZONTAL:
       if y < self.padding or y > self.allocation.height - self.padding:
@@ -114,6 +116,7 @@ class PaletteView(gtk.Widget):
     rect = gdk.Rectangle(x, y, size, size)
 
     shadow_col = self.gc.get_colormap().alloc_color(214*257,214*257,214*257)
+    black_col = self.gc.get_colormap().alloc_color(0,0,0)
     for color in self.palette.colors:
       fg_col = self.gc.get_colormap().alloc_color(color.r * 257, color.g * 257, color.b * 257)
 
@@ -125,6 +128,11 @@ class PaletteView(gtk.Widget):
       #draw swatch
       self.gc.set_foreground(fg_col)
       self.window.draw_rectangle(self.gc, True, *r)
+
+      if self.selected == color:
+        print "draw selected box!"
+        self.gc.set_foreground(black_col)
+        self.window.draw_rectangle(self.gc, False, r.x,r.y,r.width-1,r.height-1)
 
       if self.direction == self.HORIZONTAL: rect.x += rect.width + 2 * self.padding
       else: rect.y += rect.height + 2 * self.padding
@@ -142,12 +150,17 @@ class PaletteView(gtk.Widget):
     if event.button == 1:
       col = self.color_at(event.x, event.y)
       if col:
+        self.selected = col
+        self.queue_draw()
         self.emit('select-color', col)
     elif event.button == 2:
       pass
     elif event.button == 3:
       col = self.color_at(event.x, event.y)
       if col:
+        if self.selected == col:
+          self.selected = None
+        self.emit('select-color', None)
         self.emit('delete-color', col)
 
   def cb_motion_notify(self, widget, event):
