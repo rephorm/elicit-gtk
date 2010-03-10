@@ -36,8 +36,8 @@ class Color(gobject.GObject):
     self.emit('changed')
 
   def set_hsv(self, h, s, v):
-    if (min(r,g,b) < 0 or max(r,g,b) > 255):
-      raise ValueError("Values must be between 0 and 255")
+    if min(h,s,v) < 0 or max(s,v) > 1 or h > 360:
+      raise ValueError("Hue must be between 0 and 360. Sat. and Val. must be between 0 and 1")
 
     if self.h == h and self.s == s and self.v == v: return
 
@@ -89,23 +89,28 @@ class Color(gobject.GObject):
       self.h = self.s = self.v = 0
       return
 
-    self.v = col[maxc] / 255
+    self.v = col[maxc] / 255.0
     self.s = (1.0 - float(col[minc])/col[maxc])
-    self.h = 60 * ( (maxc * 2) +
-        (col[(maxc + 1)%3] - col[(maxc+2)%3]) / (col[maxc] - col[minc]) )
-    if (self.h < 360): self.h += 360
+
+    if col[maxc] == col[minc]:
+      self.h = 0
+    else:
+      self.h = 60 * ( (maxc * 2) +
+          (float(col[(maxc + 1)%3] - col[(maxc+2)%3])) / (col[maxc] - col[minc]) )
+    if (self.h < 0): self.h += 360
    
   def hsv_to_rgb(self):
     if (self.s == 0):
       self.r = self.g = self.b = self.v
       return
 
-    h = self.h / 60
+    h = self.h / 60.0
+    v = 255 * self.v
     i = int(h)
     f = h - i
-    p = v * (1 - self.s)
-    q = v * (1 - self.s * f)
-    t = v * (1 - self.s * (1 - f))
+    p = int(v * (1 - self.s))
+    q = int(v * (1 - self.s * f))
+    t = int(v * (1 - self.s * (1 - f)))
 
     if i == 0:
       self.r, self.g, self.b = v, t, p
