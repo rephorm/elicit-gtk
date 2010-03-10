@@ -55,12 +55,23 @@ class Elicit:
     c = Color()
     c.set_rgb(*picker.color.rgb())
     self.palette.append(c)
+    self.palette_view.select(c)
 
   def palette_view_select_color(self, palette_view, color):
-    self.gconf.set_string('/apps/elicit/color', color.hex())
+    if color == None:
+      self.color_name_entry.set_text("")
+      self.color_name_entry.set_sensitive(False)
+    else:
+      self.gconf.set_string('/apps/elicit/color', color.hex())
+      self.color_name_entry.set_text(color.name)
+      self.color_name_entry.set_sensitive(True)
 
   def palette_view_delete_color(self, palette_view, color):
     self.palette.remove(color)
+
+  def color_name_entry_changed(self, color_name_entry):
+    if self.palette_view.selected:
+      self.palette_view.selected.name = color_name_entry.get_text()
 
   def color_changed(self, color):
     self.colorspin['r'].set_value(self.color.r)
@@ -70,7 +81,8 @@ class Elicit:
     self.colorspin['s'].set_value(self.color.s)
     self.colorspin['v'].set_value(self.color.v)
     self.hex_label.set_label(self.color.hex())
-    pass
+    if self.palette_view.selected and color.hex() != self.palette_view.selected.hex():
+      self.palette_view.select(None)
 
   def color_spin_rgb_changed(self, spin):
     r,g,b = self.color.rgb()
@@ -180,7 +192,6 @@ class Elicit:
     self.hex_label.set_selectable(True)
     table.attach(self.hex_label,0,4,3,4,gtk.FILL,gtk.EXPAND,2,2)
 
-
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
     vbox.pack_start(frame, False)
@@ -189,6 +200,17 @@ class Elicit:
     self.palette_view.connect('select-color', self.palette_view_select_color)
     self.palette_view.connect('delete-color', self.palette_view_delete_color)
     frame.add(self.palette_view)
+
+    # color name entry / palette tools
+    hbox = gtk.HBox(False, 5)
+    vbox.pack_start(hbox, False)
+
+    hbox.pack_start(gtk.Label("Color Name:"), False)
+
+    self.color_name_entry = gtk.Entry()
+    self.color_name_entry.set_sensitive(False)
+    self.color_name_entry.connect('changed', self.color_name_entry_changed)
+    hbox.pack_start(self.color_name_entry, False)
 
   def init_config(self):
     self.gconf = gconf.client_get_default()

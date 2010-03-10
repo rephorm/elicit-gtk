@@ -5,6 +5,10 @@ from gtk import gdk
 from palette import Palette
 from color import Color
 
+#XXX BUGS: deleting color should update pan value if needed
+#    TODO: allow drag reordering of colors
+#          dnd of colors to other applications?
+
 class PaletteView(gtk.Widget):
   HORIZONTAL = 1
   VERTICAL = 2
@@ -24,6 +28,40 @@ class PaletteView(gtk.Widget):
     self.pan = 0
 
     self.selected = None
+
+  def select(self, color):
+    self.selected = color
+    self.pan_to_color(color)
+    self.queue_draw()
+    self.emit('select-color', color)
+
+  def set_pan(self, pan):
+    if pan < 0: pan = 0
+
+    if self.direction == self.HORIZONTAL:
+      pan_max = len(self.palette.colors) * self.allocation.height - self.allocation.width
+    else:
+      pan_max = len(self.palette.colors) * self.allocation.width - self.allocation.height
+
+    if pan_max < 0: pan_max = 0
+    if pan > pan_max: pan = pan_max
+
+    if pan != self.pan:
+      self.pan = pan
+      self.queue_draw()
+
+  def pan_to_color(self, color):
+    i = self.palette.colors.index(color)
+
+    if self.direction == self.HORIZONTAL:
+      pan = self.allocation.height * i
+      if pan < self.pan or pan > self.pan + self.allocation.width - self.allocation.height:
+        self.set_pan(pan)
+    else:
+      if pan < self.pan or pan > self.pan + self.allocation.height - self.allocation.width:
+        self.set_pan(pan)
+      pan = self.allocation.width * i
+
 
   def color_at(self, x, y):
     if self.direction == self.HORIZONTAL:
@@ -130,7 +168,6 @@ class PaletteView(gtk.Widget):
       self.window.draw_rectangle(self.gc, True, *r)
 
       if self.selected == color:
-        print "draw selected box!"
         self.gc.set_foreground(black_col)
         self.window.draw_rectangle(self.gc, False, r.x,r.y,r.width-1,r.height-1)
 
@@ -150,40 +187,24 @@ class PaletteView(gtk.Widget):
     if event.button == 1:
       col = self.color_at(event.x, event.y)
       if col:
-        self.selected = col
-        self.queue_draw()
-        self.emit('select-color', col)
+        self.select(col)
     elif event.button == 2:
       pass
     elif event.button == 3:
       col = self.color_at(event.x, event.y)
       if col:
         if self.selected == col:
-          self.selected = None
-        self.emit('select-color', None)
+          self.select(None)
+
         self.emit('delete-color', col)
 
   def cb_motion_notify(self, widget, event):
     pass
 
   def cb_scroll(self, widget, event):
-    if event.direction == gtk.gdk.SCROLL_UP or event.direction == gtk.gdk.SCROLL_RIGHT:
-      pan = self.pan + 5
-    if event.direction == gtk.gdk.SCROLL_DOWN or event.direction == gtk.gdk.SCROLL_LEFT:
-      pan = self.pan - 5
-
-    if pan < 0: pan = 0
-
-    if self.direction == self.HORIZONTAL:
-      pan_max = len(self.palette.colors) * self.allocation.height - self.allocation.width
-    else:
-      pan_max = len(self.palette.colors) * self.allocation.width - self.allocation.height
-
-    if pan_max < 0: pan_max = 0
-    if pan > pan_max: pan = pan_max
-
-    if pan != self.pan:
-      self.pan = pan
-      self.queue_draw()
+    if event.direction == gtk.gdk.SCROLL_DOWN or event.direction == gtk.gdk.SCROLL_RIGHT:
+      self.set_pan(self.pan + 5)
+    if event.direction == gtk.gdk.SCROLL_UP or event.direction == gtk.gdk.SCROLL_LEFT:
+      self.set_pan(self.pan - 5)
 
 gobject.type_register(PaletteView)      
