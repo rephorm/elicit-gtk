@@ -69,6 +69,7 @@ class Elicit:
     self.colorspin['h'].set_value(self.color.h)
     self.colorspin['s'].set_value(self.color.s)
     self.colorspin['v'].set_value(self.color.v)
+    self.hex_label.set_label(self.color.hex())
     pass
 
   def color_spin_rgb_changed(self, spin):
@@ -143,7 +144,7 @@ class Elicit:
 
     self.colorspin = {}
     # add RGB spinboxes
-    table = gtk.Table(3,4)
+    table = gtk.Table(4,4)
     hbox.pack_start(table, False)
 
     row = 0
@@ -158,12 +159,7 @@ class Elicit:
       self.colorspin[type] = spin
       row += 1
 
-    # add HSV spinboxes
-    table = gtk.Table(3,2)
-    hbox.pack_start(table, False)
-
     row = 0
-    col = 2
     for type in ("h","s","v"):
       label = gtk.Label(type.upper())
       table.attach(label, 2,3,row,row+1,0,0,2,2)
@@ -179,6 +175,11 @@ class Elicit:
       table.attach(spin, 3,4,row,row+1,gtk.FILL,gtk.EXPAND,2,2)
       self.colorspin[type] = spin
       row += 1
+
+    self.hex_label = gtk.Label()
+    self.hex_label.set_selectable(True)
+    table.attach(self.hex_label,0,4,3,4,gtk.FILL,gtk.EXPAND,2,2)
+
 
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
