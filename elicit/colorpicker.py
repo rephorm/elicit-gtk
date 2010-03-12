@@ -3,6 +3,7 @@ import gtk
 import gtk.gdk as gdk
 import glib
 import pygtk
+import os
 
 from color import Color
 
@@ -11,6 +12,9 @@ if gtk.pygtk_version < (2,0):
   raise SystemExit
 
 class ColorPicker(gtk.Widget):
+  data_path = os.path.join(os.path.dirname(__file__), 'data')
+  icon_path = os.path.join(data_path, 'icons')
+
   __gsignals__ = {
       'save-color': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ())
   }
@@ -116,7 +120,7 @@ class ColorPicker(gtk.Widget):
     self.color_changed(self.color)
 
     #XXX install cursor and use config path to load it
-    pbuf = gdk.pixbuf_new_from_file("../data/dropper.png")
+    pbuf = gdk.pixbuf_new_from_file(os.path.join(self.icon_path, "dropper.png"))
     if pbuf:
       self.cursor = gdk.Cursor(self.window.get_display(), pbuf, 8, 21);
       self.window.set_cursor(self.cursor)

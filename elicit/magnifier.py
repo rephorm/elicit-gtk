@@ -4,6 +4,7 @@ import gtk
 import gtk.gdk as gdk
 import glib
 import pygtk
+import os
 
 if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
@@ -11,6 +12,9 @@ if gtk.pygtk_version < (2,0):
 
 
 class Magnifier(gtk.Widget):
+  data_path = os.path.join(os.path.dirname(__file__), 'data')
+  icon_path = os.path.join(data_path, 'icons')
+
   __gsignals__ = {
       'zoom-changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ()),
       'grid-toggled': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ()),
@@ -252,7 +256,7 @@ class Magnifier(gtk.Widget):
 
 
     #XXX install cursor and use config path to load it
-    pbuf = gdk.pixbuf_new_from_file("../data/magnify.png")
+    pbuf = gdk.pixbuf_new_from_file(os.path.join(self.icon_path,"magnify.png"))
     if pbuf:
       self.cursor = gdk.Cursor(self.window.get_display(), pbuf, 6, 6);
       self.window.set_cursor(self.cursor)
