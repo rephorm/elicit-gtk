@@ -1,14 +1,69 @@
-A GTK version of Elicit
-Coming along
+============
+Elicit (gtk)
+============
+
+Elicit is a designers tool that allows one to magnify sections of the screen and select colors from any application, and organize those colors into palettes.
+
+Dependencies
+------------
+
+Elicit is written in python for the gtk toolkit. As such, it requires:
+
+python 2.6 
+pygtk  2.16
+pygobject 2.18
+
+Earlier versions may work, but have not been tested.
 
 
-Before running the first time:
-  $ gconftool-2 --install-schema-file data/elicit.schemas
+Installation
+------------
 
-To run:
-  $ cd src
-  $ python elicit.py
+# ./setup.py install
 
 
+Usage
+=====
+
+
+Magnification
+-------------
+After running elicit, there is a large empty box at the top called the magnifier. Left click and drag on this to zoom in on the portion of the screen under the mouse.
+
+The size of the region of screen magnified is determined by the size of the  magnifier. Increase the size of the window to obtain larger regions.
+
+Scroll the mouse wheel over the magnifier to change the zoom level. After zooming in on the image, middle click and drag to pan around on the image.
+
+By ctrl-clicking and dragging on the magnified image you can select a region of the image. Its size and diagonal are displayed beneath the magnifier.
+
+Ctrl-click and release to remove the measurement box.
+
+Check the 'Show Grid' checkbox to display the pixel grid over the magnified image.
+
+
+Selecting Colors
+----------------
+The empty box on the middle left is a color picker. Left click and drag to select the color underneath the mouse cursor.
+
+The Red, Green and Blue values are shown to the right of the color picker, along with the Hue, Saturation and Value and hexidecimal RGB format.
+
+Right click on the color picker to add the current color to the palette.
+
+Palettes
+--------
+
+Below the color picker is a section for managing palettes.
+
+A dropdown list shows all available palettes. Typing in the textbox changes the name of the current palette.
+
+To the right of the dropdown are two buttons for adding new palettes, or deleting ones you no longer wish to use.
+
+Below this is the palette itself. Clicking on a color selects it, updating the color picker and the color values above.
+
+If the palette contains more colors than fit on the screen, use the scroll wheel or middle-drag to pan.
+
+Finally, you can edit the name of the selected color by changing it in the 'Color Name" textbox.
+
+The palettes are stored in the GIMP palette formate (.gpl) in the 'palettes' subdirectory fo the users configuration directory (usually ~/.config/elicit/)
 
 
