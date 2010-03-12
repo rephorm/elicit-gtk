@@ -1,11 +1,11 @@
 import gobject
 import gtk
 from gtk import gdk
+import glib
 
 from palette import Palette
 from color import Color
 
-#XXX BUGS: deleting color should update pan value if needed
 #    TODO: allow drag reordering of colors
 #          dnd of colors to other applications?
 
@@ -28,6 +28,8 @@ class PaletteView(gtk.Widget):
     self.pan = 0
 
     self.selected = None
+
+    self.panning = False
 
   def select(self, color):
     self.selected = color
@@ -58,12 +60,13 @@ class PaletteView(gtk.Widget):
 
     if self.direction == self.HORIZONTAL:
       pan = self.allocation.height * i
-      if pan < self.pan or pan > self.pan + self.allocation.width - self.allocation.height:
+      if pan < self.pan:
         self.set_pan(pan)
+      elif  pan > self.pan + self.allocation.width - self.allocation.height:
+        self.set_pan(pan - self.allocation.width + self.allocation.height)
     else:
       if pan < self.pan or pan > self.pan + self.allocation.height - self.allocation.width:
         self.set_pan(pan)
-      pan = self.allocation.width * i
 
 
   def color_at(self, x, y):
@@ -96,6 +99,7 @@ class PaletteView(gtk.Widget):
   def set_palette(self, palette):
     self.palette = palette
     self.palette.connect('changed', self.palette_changed)
+    self.set_pan(self.pan)
     self.queue_draw()
 
   def do_realize(self):
@@ -148,12 +152,12 @@ class PaletteView(gtk.Widget):
 
     if self.direction == self.HORIZONTAL:
       size = self.allocation.height - 2 * self.padding
-      x = self.padding - self.pan
+      x = self.padding - int(self.pan)
       y = self.padding
     else:
       size = self.allocation.width - 2 * self.padding
       x = self.padding
-      y = self.padding - self.pan
+      y = self.padding - int(self.pan)
 
     rect = gdk.Rectangle(x, y, size, size)
 
@@ -164,16 +168,18 @@ class PaletteView(gtk.Widget):
 
       r = rect.intersect(event.area)
 
-      #draw shadow
-      self.gc.set_foreground(shadow_col)
-      self.window.draw_rectangle(self.gc, True, r.x+1, r.y+1, r.width, r.height)
-      #draw swatch
-      self.gc.set_foreground(fg_col)
-      self.window.draw_rectangle(self.gc, True, *r)
+      # if interesection vanishes, don't draw anything
+      if r.width > 0 and r.height > 0:
+        #draw shadow
+        self.gc.set_foreground(shadow_col)
+        self.window.draw_rectangle(self.gc, True, r.x+1, r.y+1, r.width, r.height)
+        #draw swatch
+        self.gc.set_foreground(fg_col)
+        self.window.draw_rectangle(self.gc, True, *r)
 
-      if self.selected == color:
-        self.gc.set_foreground(black_col)
-        self.window.draw_rectangle(self.gc, False, r.x,r.y,r.width-1,r.height-1)
+        if self.selected == color:
+          self.gc.set_foreground(black_col)
+          self.window.draw_rectangle(self.gc, False, r.x,r.y,r.width-1,r.height-1)
 
       if self.direction == self.HORIZONTAL: rect.x += rect.width + 2 * self.padding
       else: rect.y += rect.height + 2 * self.padding
@@ -182,6 +188,9 @@ class PaletteView(gtk.Widget):
     if event.button == 1:
       pass
     elif event.button == 2:
+      self.panning = True
+      self.pan_start = (event.x, event.y)
+      self.pan_start_pan = self.pan
       pass
     elif event.button == 3:
       pass
@@ -193,7 +202,7 @@ class PaletteView(gtk.Widget):
       if col:
         self.select(col)
     elif event.button == 2:
-      pass
+      self.panning = False
     elif event.button == 3:
       col = self.color_at(event.x, event.y)
       if col:
@@ -201,14 +210,23 @@ class PaletteView(gtk.Widget):
           self.select(None)
 
         self.emit('delete-color', col)
+        self.set_pan(self.pan)
 
   def cb_motion_notify(self, widget, event):
-    pass
+    if self.panning:
+      if self.direction == self.HORIZONTAL:
+        pan_frac = 2 * (event.x - self.pan_start[0])/ self.allocation.width
+        pan = pan_frac * (len(self.palette.colors) * self.allocation.height - self.allocation.width)
+      else:
+        pan_frac = 2 * (event.y - self.pan_start[1]) / self.allocation.height
+        pan = pan_frac * (len(self.palette.colors) * self.allocation.width - self.allocation.height)
+
+      self.set_pan(self.pan_start_pan + pan)
 
   def cb_scroll(self, widget, event):
     if event.direction == gtk.gdk.SCROLL_DOWN or event.direction == gtk.gdk.SCROLL_RIGHT:
-      self.set_pan(self.pan + 5)
+      self.set_pan(self.pan + 10)
     if event.direction == gtk.gdk.SCROLL_UP or event.direction == gtk.gdk.SCROLL_LEFT:
-      self.set_pan(self.pan - 5)
+      self.set_pan(self.pan - 10)
 
 gobject.type_register(PaletteView)      
