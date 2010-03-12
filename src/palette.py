@@ -72,7 +72,7 @@ class Palette(gobject.GObject):
               c.name = cname
               c.set_rgb(r,g,b)
               self.colors.append(c)
-            except:
+            except: #XXX handle specific exceptions only
               self.load_errors.append("Invalid color entry on line {0}. Skipping.\n".format(lineno))
       self.emit('changed')
     except IOError:
