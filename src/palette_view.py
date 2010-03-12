@@ -24,6 +24,7 @@ class PaletteView(gtk.Widget):
     self.palette = None
     self.direction = self.HORIZONTAL
     self.padding = 3
+    self.colors = {}
 
     self.pan = 0
 
