@@ -313,7 +313,7 @@ class Elicit:
     self.grid_check.set_active(self.mag.show_grid)
 
     palette = self.gconf.get_string('/apps/elicit/palette')
-    if not palette: palette = 'elicit.gpl'
+    if not palette: palette = 'default.gpl'
     index = self.palette_list.index_of_file(palette)
     if index == None:
       index = 0
