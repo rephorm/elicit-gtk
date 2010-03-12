@@ -159,7 +159,7 @@ class Magnifier(gtk.Widget):
 
     # find new origin, assuming no pan
     x0 = (self.allocation.width - self.pixbuf_width)/2
-    y0 = (self.allocation.width - self.pixbuf_width)/2
+    y0 = (self.allocation.height - self.pixbuf_height)/2
 
     # place new location of pixel clicked under mouse
     pan_x = event.x - (dx * zoom / old_zoom + x0)
