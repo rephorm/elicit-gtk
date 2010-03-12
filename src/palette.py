@@ -71,6 +71,7 @@ class Palette(gobject.GObject):
               self.colors.append(c)
             except:
               self.load_errors.append("Invalid color entry on line {0}. Skipping.\n".format(lineno))
+      self.emit('changed')
     except IOError:
         #if nonexistant filename is passed in, assume we want to save to that in the future
       pass
