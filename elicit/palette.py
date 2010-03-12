@@ -94,6 +94,7 @@ class Palette(gobject.GObject):
         while os.path.exists(self.filename):
           index += 1
           self.filename = os.path.join(self.PaletteDir, '%s-%d.gpl'%(base,index))
+        self.emit('changed')
       else:
         raise "No filename or default palette directory specified."
 

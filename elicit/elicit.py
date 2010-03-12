@@ -25,7 +25,11 @@ class Elicit:
   appname = 'elicit'
 
   def quit(self, widget, data=None):
+    old_filename = self.palette.filename
     self.palette.save()
+    if old_filename == None:
+      self.gconf.set_string('/apps/elicit/palette', os.path.basename(self.palette.filename))
+
     gtk.main_quit()
 
   def main(self):
