@@ -229,6 +229,9 @@ class Elicit:
     self.hex_label.set_selectable(True)
     table.attach(self.hex_label,0,4,3,4,gtk.FILL,gtk.EXPAND,2,2)
 
+    sep = gtk.HSeparator()
+    vbox.pack_start(sep, False)
+
     # palette tools
     hbox = gtk.HBox(False, 5)
     vbox.pack_start(hbox, False)
