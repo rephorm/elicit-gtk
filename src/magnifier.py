@@ -13,7 +13,8 @@ if gtk.pygtk_version < (2,0):
 class Magnifier(gtk.Widget):
   __gsignals__ = {
       'zoom-changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ()),
-      'grid-toggled': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ())
+      'grid-toggled': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ()),
+      'measure-changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ()),
   }
 
   def __init__(self):
@@ -154,6 +155,7 @@ class Magnifier(gtk.Widget):
         self.measuring = True
         self.measure_start = (event.x, event.y)
         self.measure_rect = None
+        self.emit('measure-changed')
         self.queue_draw()
       else:
         self.grabbing = True
@@ -228,6 +230,7 @@ class Magnifier(gtk.Widget):
       rect = gdk.Rectangle(x0, y0, x1-x0+1 , y1-y0+1)
       if rect != self.measure_rect:
         self.measure_rect = rect
+        self.emit('measure-changed')
         self.queue_draw()
 
   def do_realize(self):
@@ -266,13 +269,13 @@ class Magnifier(gtk.Widget):
     self.gc = self.style.fg_gc[gtk.STATE_NORMAL]
 
     self.measure_gc = gdk.GC(self.window)
-    self.measure_gc.set_foreground(self.measure_gc.get_colormap().alloc("#fff"))
-    self.measure_gc.set_background(self.measure_gc.get_colormap().alloc("#000"))
+    self.measure_gc.set_foreground(self.measure_gc.get_colormap().alloc_color("#fff"))
+    self.measure_gc.set_background(self.measure_gc.get_colormap().alloc_color("#000"))
     self.measure_gc.set_dashes(0,(4,4))
     self.measure_gc.set_line_attributes(1, gdk.LINE_DOUBLE_DASH, gdk.CAP_BUTT, gdk.JOIN_MITER)
 
     self.grid_gc = gdk.GC(self.window)
-    self.grid_gc.set_foreground(self.measure_gc.get_colormap().alloc("#777"))
+    self.grid_gc.set_foreground(self.measure_gc.get_colormap().alloc_color("#777"))
 
     self.connect("motion-notify-event", self.cb_motion_notify)
     self.connect("button-press-event", self.cb_button_press)
