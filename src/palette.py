@@ -6,6 +6,9 @@ class Palette(gobject.GObject):
   __gsignals__ = {
     'changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ())
     }
+
+  PaletteDir = None
+
   def __init__(self):
     super(Palette, self).__init__()
     self.name = "Untitled Palette"
@@ -79,9 +82,20 @@ class Palette(gobject.GObject):
      
   def save(self, filename = None):
     if filename:
+      if filename == os.path.basename(filename):
+        filename = os.path.join(self.PaletteDir, filename)
       self.filename = filename
+
     if self.filename == None:
-      raise "No filename specified."
+      if self.PaletteDir:
+        base = '-'.join(self.name.lower().split(' '))
+        self.filename = os.path.join(self.PaletteDir, base + '.gpl')
+        index = 0
+        while os.path.exists(self.filename):
+          index += 1
+          self.filename = os.path.join(self.PaletteDir, '-%d.gpl'%index)
+      else:
+        raise "No filename or default palette directory specified."
 
     dir = os.path.dirname(self.filename)
     if not os.path.exists(dir):

@@ -20,7 +20,6 @@ if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
   raise SystemExit
 
-
 class Elicit:
   appname = 'elicit'
 
@@ -107,11 +106,26 @@ class Elicit:
 
   def palette_combo_selected(self, combo, palette):
     if (self.palette != palette):
-      self.gconf.set_string('/apps/elicit/palette', os.path.basename(palette.filename))
-      if self.palette: self.palette.save()
+      if (palette.filename):
+        self.gconf.set_string('/apps/elicit/palette', os.path.basename(palette.filename))
+      if self.palette:
+        old_filename = self.palette.filename
+        self.palette.save()
+
+        #update palette list with new filename
+        if old_filename != self.palette.filename:
+          index = self.palette_list.index_of_palette(self.palette)
+          self.palette_list[index][1] = self.palette.filename
+
       self.palette = palette
       self.palette_view.set_palette(self.palette)
       self.color_name_entry.set_sensitive(False)
+
+  def add_palette(self, button):
+    p = Palette()
+    p.name = "Untitled Palette"
+    self.palette_list.append(p)
+    self.palette_combo.select(self.palette_list.index_of_palette(p))
 
   def build_gui(self):
     self.win = gtk.Window()
@@ -214,6 +228,7 @@ class Elicit:
     button = gtk.Button()
     button.set_image(gtk.image_new_from_stock(gtk.STOCK_ADD,gtk.ICON_SIZE_BUTTON))
     button.set_relief(gtk.RELIEF_NONE)
+    button.connect('clicked', self.add_palette)
     hbox.pack_start(button, False)
 
     # palette view
@@ -286,6 +301,7 @@ class Elicit:
     self.build_gui()
 
     self.palette_dir = os.path.join(base.save_config_path(self.appname), 'palettes')
+    Palette.PaletteDir = self.palette_dir
 
     self.palette_list = PaletteList()
     self.palette_list.load(self.palette_dir)
