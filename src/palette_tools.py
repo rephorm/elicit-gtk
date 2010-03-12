@@ -11,12 +11,15 @@ class PaletteList(gtk.ListStore):
 
   def load(self, dir):
     for f in glob.glob(os.path.join(dir,'*.gpl')):
-      self.append(f)
+      self.append_path(f)
 
-  def append(self, path):
+  def append(self, palette):
+    super(PaletteList,self).append((palette.name, palette.filename, palette))
+
+  def append_path(self, path):
     p = Palette()
     if p.load(path):
-      super(PaletteList,self).append((p.name, path, p))
+      self.append(p)
 
   def set_text(self, index, text):
     row = self[index]
