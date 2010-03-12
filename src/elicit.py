@@ -127,6 +127,21 @@ class Elicit:
     self.palette_list.append(p)
     self.palette_combo.select(self.palette_list.index_of_palette(p))
 
+  def delete_palette(self, button):
+    if not self.palette: return
+
+    d = gtk.MessageDialog(self.win,
+        gtk.DIALOG_MODAL, gtk.MESSAGE_WARNING,
+        gtk.BUTTONS_OK_CANCEL, None)
+
+    d.set_markup("Are you sure you want to delete the palette <b>%s</b>? This cannot be undone." % self.palette.name)
+    response = d.run()
+    d.destroy()
+    if response == gtk.RESPONSE_OK:
+      p = self.palette
+      self.palette_combo.remove(self.palette_list.index_of_palette(p))
+      p.delete()
+
   def build_gui(self):
     self.win = gtk.Window()
     self.win.set_title("Elicit")
@@ -231,6 +246,13 @@ class Elicit:
     button.connect('clicked', self.add_palette)
     hbox.pack_start(button, False)
 
+    button = gtk.Button()
+    button.set_image(gtk.image_new_from_stock(gtk.STOCK_DELETE,gtk.ICON_SIZE_BUTTON))
+    button.set_relief(gtk.RELIEF_NONE)
+    button.connect('clicked', self.delete_palette)
+    hbox.pack_start(button, False)
+
+
     # palette view
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
@@ -273,7 +295,10 @@ class Elicit:
 
     palette = self.gconf.get_string('/apps/elicit/palette')
     if not palette: palette = 'elicit.gpl'
-    self.palette_combo.select(self.palette_list.index_of_file(palette))
+    index = self.palette_list.index_of_file(palette)
+    if index == None:
+      index = 0
+    self.palette_combo.select(index)
 
   def config_changed(self, client, gconf_id, entry, user_data):
     key = entry.key[13:]
