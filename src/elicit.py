@@ -14,6 +14,7 @@ from colorpicker import ColorPicker
 from palette import Palette
 from color import Color
 from palette_view import PaletteView
+from palette_list import PaletteList, PaletteCombo
 
 if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
@@ -70,7 +71,7 @@ class Elicit:
     self.palette.remove(color)
 
   def color_name_entry_changed(self, color_name_entry):
-    if self.palette_view.selected:
+    if self.palette and self.palette_view.selected:
       self.palette_view.selected.name = color_name_entry.get_text()
 
   def color_changed(self, color):
@@ -104,6 +105,13 @@ class Elicit:
       v = spin.get_value()
     self.color.set_hsv(h,s,v)
 
+  def palette_combo_selected(self, combo, palette):
+    if (self.palette != palette):
+      self.gconf.set_string('/apps/elicit/palette', os.path.basename(palette.filename))
+      if self.palette: self.palette.save()
+      self.palette = palette
+      self.palette_view.set_palette(self.palette)
+      self.color_name_entry.set_sensitive(False)
 
   def build_gui(self):
     self.win = gtk.Window()
@@ -192,6 +200,23 @@ class Elicit:
     self.hex_label.set_selectable(True)
     table.attach(self.hex_label,0,4,3,4,gtk.FILL,gtk.EXPAND,2,2)
 
+    # palette tools
+    hbox = gtk.HBox(False, 5)
+    vbox.pack_start(hbox, False)
+
+    # Palette tools
+    hbox.pack_start(gtk.Label("Palette:"), False)
+
+    self.palette_combo = PaletteCombo()
+    hbox.pack_start(self.palette_combo)
+    self.palette_combo.connect('selected', self.palette_combo_selected)
+
+    button = gtk.Button()
+    button.set_image(gtk.image_new_from_stock(gtk.STOCK_ADD,gtk.ICON_SIZE_BUTTON))
+    button.set_relief(gtk.RELIEF_NONE)
+    hbox.pack_start(button, False)
+
+    # palette view
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
     vbox.pack_start(frame, False)
@@ -233,8 +258,7 @@ class Elicit:
 
     palette = self.gconf.get_string('/apps/elicit/palette')
     if not palette: palette = 'elicit.gpl'
-
-    self.palette.load(os.path.join(self.palette_dir, palette))
+    self.palette_combo.select(self.palette_list.index_of_file(palette))
 
   def config_changed(self, client, gconf_id, entry, user_data):
     key = entry.key[13:]
@@ -251,24 +275,25 @@ class Elicit:
     elif key == 'palette':
       palette = entry.value.get_string()
       if not palette: palette = 'elicit.gpl'
-      self.palette.load(os.path.join(self.palette_dir, palette))
+      self.palette_combo.select(self.palette_list.index_of_file(palette))
     elif key == 'grab_rate':
       self.mag.set_grab_rate(entry.value.get_int())
 
   def __init__(self):
-    self.palette = Palette()
+    self.palette = None
     self.color = Color()
     self.color.connect('changed', self.color_changed)
     self.build_gui()
 
-    self.palette_view.set_palette(self.palette)
-    self.colorpicker.set_color(self.color)
-
     self.palette_dir = os.path.join(base.save_config_path(self.appname), 'palettes')
 
+    self.palette_list = PaletteList()
+    self.palette_list.load(self.palette_dir)
+    self.palette_combo.set_model(self.palette_list)
+
+    self.colorpicker.set_color(self.color)
+
     self.init_config()
-    #self.load_config()
-    #self.palette.load(path)
 
 if __name__ == "__main__":
   el = Elicit();
