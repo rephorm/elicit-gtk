@@ -29,7 +29,6 @@ class Color(gobject.GObject):
     b = int(b)
 
     if self.r == r and self.g == g and self.b == b: return
-
     self.r, self.g, self.b = r, g, b
     self.type = Color.RGB
     self.rgb_to_hsv()
@@ -101,11 +100,11 @@ class Color(gobject.GObject):
    
   def hsv_to_rgb(self):
     if (self.s == 0):
-      self.r = self.g = self.b = self.v
+      self.r = self.g = self.b = int(255*self.v)
       return
 
     h = self.h / 60.0
-    v = 255 * self.v
+    v = int(255 * self.v)
     i = int(h)
     f = h - i
     p = int(v * (1 - self.s))
