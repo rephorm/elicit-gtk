@@ -14,7 +14,7 @@ from colorpicker import ColorPicker
 from palette import Palette
 from color import Color
 from palette_view import PaletteView
-from palette_list import PaletteList, PaletteCombo
+from palette_tools import PaletteList, PaletteCombo
 
 if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
