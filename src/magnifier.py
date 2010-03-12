@@ -30,6 +30,9 @@ class Magnifier(gtk.Widget):
     self.pan_x = 0
     self.pan_y = 0
 
+    self.measuring = False
+    self.measure_rect = None
+
   def grab_immediate(self, x, y, w, h):
     self.screen_rect = gdk.Rectangle(x, y, w, h)
     self.pan_x = 0
@@ -132,9 +135,28 @@ class Magnifier(gtk.Widget):
     if (self.grab_timeout == None):
       self.grab_timeout = glib.timeout_add(1000 / self.grab_rate, self.cb_grab_timeout)
 
+  def origin(self):
+    x0 = (self.allocation.width - self.pixbuf_width)/2 + self.pan_x
+    y0 = (self.allocation.height - self.pixbuf_height)/2 + self.pan_y
+    return (x0,y0)
+
+  def coord_widget_to_pixbuf(self, x, y):
+    x0,y0 = self.origin()
+    return (int((x - x0) / self.zoom), int((y - y0) / self.zoom))
+
+  def coord_pixbuf_to_widget(self, x, y):
+    x0,y0 = self.origin()
+    return (x * self.zoom + x0, y * self.zoom + y0)
+
   def cb_button_press(self, widget, event):
     if event.button == 1:
-      self.grabbing = True
+      if event.state & gdk.CONTROL_MASK:
+        self.measuring = True
+        self.measure_start = (event.x, event.y)
+        self.measure_rect = None
+        self.queue_draw()
+      else:
+        self.grabbing = True
     elif event.button == 2:
       self.panning = True
       self.pan_start_x = event.x - self.pan_x
@@ -168,6 +190,7 @@ class Magnifier(gtk.Widget):
 
   def cb_button_release(self, widget, event):
     if event.button == 1:
+      self.measuring = False
       self.grabbing = False
     elif event.button == 2:
       self.panning = False
@@ -192,6 +215,20 @@ class Magnifier(gtk.Widget):
       pan_y = int(event.y - self.pan_start_y)
 
       self.pan(pan_x, pan_y)
+
+    elif self.measuring:
+      x0, y0 = self.coord_widget_to_pixbuf(*self.measure_start)
+      x1, y1 = self.coord_widget_to_pixbuf(event.x, event.y)
+
+      if x0 > x1:
+        x0, x1 = x1, x0
+      if y0 > y1:
+        y0, y1 = y1, y0
+
+      rect = gdk.Rectangle(x0, y0, x1-x0+1 , y1-y0+1)
+      if rect != self.measure_rect:
+        self.measure_rect = rect
+        self.queue_draw()
 
   def do_realize(self):
     self.set_flags(self.flags() | gtk.REALIZED)
@@ -227,6 +264,15 @@ class Magnifier(gtk.Widget):
     self.style.set_background(self.window, gtk.STATE_NORMAL)
     self.window.move_resize(*self.allocation)
     self.gc = self.style.fg_gc[gtk.STATE_NORMAL]
+
+    self.measure_gc = gdk.GC(self.window)
+    self.measure_gc.set_foreground(self.measure_gc.get_colormap().alloc("#fff"))
+    self.measure_gc.set_background(self.measure_gc.get_colormap().alloc("#000"))
+    self.measure_gc.set_dashes(0,(4,4))
+    self.measure_gc.set_line_attributes(1, gdk.LINE_DOUBLE_DASH, gdk.CAP_BUTT, gdk.JOIN_MITER)
+
+    self.grid_gc = gdk.GC(self.window)
+    self.grid_gc.set_foreground(self.measure_gc.get_colormap().alloc("#777"))
 
     self.connect("motion-notify-event", self.cb_motion_notify)
     self.connect("button-press-event", self.cb_button_press)
@@ -276,10 +322,20 @@ class Magnifier(gtk.Widget):
       ymax = r2.y + r.height + 1
 
       for x in range(xmin, xmax, self.zoom):
-        self.window.draw_line(self.gc, x, r.y, x, r.y + r.height)
+        self.window.draw_line(self.grid_gc, x, r.y, x, r.y + r.height)
 
       for y in range(ymin, ymax, self.zoom):
-        self.window.draw_line(self.gc, r.x, y, r.x + r.width, y)
+        self.window.draw_line(self.grid_gc, r.x, y, r.x + r.width, y)
+
+    if (self.measure_rect):
+      x, y = self.coord_pixbuf_to_widget(self.measure_rect.x, self.measure_rect.y)
+      w = self.measure_rect.width * self.zoom
+      h = self.measure_rect.height * self.zoom
+      r = gdk.Rectangle(x,y,w,h)
+      r = r.intersect(event.area)
+      if (r.width > 0 and r.height > 0):
+        self.window.draw_rectangle(self.measure_gc, False, *r)
+
 
 gobject.type_register(Magnifier)
 
