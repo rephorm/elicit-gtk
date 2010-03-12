@@ -5,6 +5,7 @@ import glib
 import pygtk
 import gconf
 import os
+import math
 
 import xdg.BaseDirectory as base
 
@@ -44,6 +45,17 @@ class Elicit:
 
   def mag_zoom_changed(self, mag):
     self.gconf.set_int('/apps/elicit/zoom_level', mag.zoom)
+
+  def mag_measure_changed(self, mag):
+    if mag.measure_rect:
+      text = "%d x %d (%.1f diag)" % (mag.measure_rect.width,
+          mag.measure_rect.height,
+          math.sqrt(mag.measure_rect.width**2 + mag.measure_rect.height**2)
+          )
+    else:
+      text = ""
+
+    self.measure_label.set_text(text)
 
   def grid_check_toggled(self, check):
     self.gconf.set_bool('/apps/elicit/show_grid', check.get_active())
@@ -158,6 +170,10 @@ class Elicit:
     frame.add(self.mag)
     self.mag.connect('zoom-changed', self.mag_zoom_changed)
     self.mag.connect('grid-toggled', self.mag_grid_toggled)
+    self.mag.connect('measure-changed', self.mag_measure_changed)
+
+    self.measure_label = gtk.Label()
+    vbox.pack_start(self.measure_label, False)
 
     hbox = gtk.HBox(False, 5)
     vbox.pack_start(hbox, False)
@@ -317,7 +333,7 @@ class Elicit:
       self.grid_check.set_active(self.mag.show_grid)
     elif key == 'palette':
       palette = entry.value.get_string()
-      if not palette: palette = 'elicit.gpl'
+      if not palette: palette = 'default.gpl'
       self.palette_combo.select(self.palette_list.index_of_file(palette))
     elif key == 'grab_rate':
       self.mag.set_grab_rate(entry.value.get_int())
@@ -334,6 +350,16 @@ class Elicit:
     self.palette_list = PaletteList()
     self.palette_list.load(self.palette_dir)
     self.palette_combo.set_model(self.palette_list)
+
+    # no palettes, so create default
+    if len(self.palette_list) == 0:
+      palette = Palette()
+      palette.name = "Default Palette"
+      palette.filename = os.path.join(self.palette_dir, 'default.gpl')
+      self.palette_list.append(palette)
+
+      self.palette_combo.select(0)
+
 
     self.colorpicker.set_color(self.color)
 
