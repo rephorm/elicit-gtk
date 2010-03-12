@@ -83,7 +83,7 @@ class PaletteList(gtk.ListStore):
       if row[1] and os.path.basename(row[1]) == os.path.basename(file):
         return index
       index += 1
-    return -1
+    return None
 
   def palette_changed(self, palette):
     index = self.index_of_palette(palette)
