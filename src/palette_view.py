@@ -31,9 +31,12 @@ class PaletteView(gtk.Widget):
 
   def select(self, color):
     self.selected = color
-    self.pan_to_color(color)
+
+    if color: self.pan_to_color(color)
+
     self.queue_draw()
     self.emit('select-color', color)
+
 
   def set_pan(self, pan):
     if pan < 0: pan = 0
@@ -93,6 +96,7 @@ class PaletteView(gtk.Widget):
   def set_palette(self, palette):
     self.palette = palette
     self.palette.connect('changed', self.palette_changed)
+    self.queue_draw()
 
   def do_realize(self):
     self.set_flags(self.flags() | gtk.REALIZED)
