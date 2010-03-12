@@ -93,7 +93,7 @@ class Palette(gobject.GObject):
         index = 0
         while os.path.exists(self.filename):
           index += 1
-          self.filename = os.path.join(self.PaletteDir, '-%d.gpl'%index)
+          self.filename = os.path.join(self.PaletteDir, '%s-%d.gpl'%(base,index))
       else:
         raise "No filename or default palette directory specified."
 
@@ -108,5 +108,10 @@ class Palette(gobject.GObject):
       f.write("#\n")
       for c in self.colors:
         f.write("%3d %3d %3d\t%s\n" % (c.r, c.g, c.b, c.name))
+
+  def delete(self):
+    print self.filename
+    if self.filename and os.path.exists(self.filename):
+      os.unlink(self.filename)
 
 gobject.type_register(Palette)
