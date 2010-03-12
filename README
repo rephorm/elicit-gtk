@@ -62,6 +62,8 @@ Below this is the palette itself. Clicking on a color selects it, updating the c
 
 If the palette contains more colors than fit on the screen, use the scroll wheel or middle-drag to pan.
 
+Right click on a color to remove it from the palette.
+
 Finally, you can edit the name of the selected color by changing it in the 'Color Name" textbox.
 
 The palettes are stored in the GIMP palette formate (.gpl) in the 'palettes' subdirectory fo the users configuration directory (usually ~/.config/elicit/)
