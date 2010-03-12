@@ -11,6 +11,8 @@ class PaletteList(gtk.ListStore):
 
   def generate_pixbuf(self, palette):
     num = len(palette.colors)
+    if num == 0:
+      return None
     w = 32
     if num < 8:
       sw = 32
@@ -78,9 +80,10 @@ class PaletteList(gtk.ListStore):
   def index_of_file(self, file):
     index = 0
     for row in self:
-      if os.path.basename(row[1]) == os.path.basename(file):
+      if row[1] and os.path.basename(row[1]) == os.path.basename(file):
         return index
       index += 1
+    return -1
 
   def palette_changed(self, palette):
     index = self.index_of_palette(palette)
