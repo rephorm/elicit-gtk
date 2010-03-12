@@ -51,6 +51,16 @@ class PaletteCombo(gtk.ComboBoxEntry):
 
     self.connect('changed', self.changed)
 
+  def remove(self, index):
+    # XXX this is a bit hackish. but, prevents the removed item's name from getting attached to a different item when the changed cb is called. need to find a better way to do this.
+    if index == self.active:
+      self.active = -1
+    list = self.get_model()
+    iter = list.get_iter(index)
+    list.remove(iter)
+    if self.active == -1:
+      self.select(0)
+
   def select(self, index):
     self.set_active(index)
     if self.active != index:
@@ -59,7 +69,7 @@ class PaletteCombo(gtk.ComboBoxEntry):
 
   def changed(self,combo):
     index = self.get_active()
-    if index == -1:
+    if index == -1 and self.active != -1:
       row = self.get_model()[self.active]
       self.get_model().set_text(self.active, combo.child.get_text())
       self.select(self.active)
