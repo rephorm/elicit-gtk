@@ -1,0 +1,14 @@
+Things left to do (unprioritized):
+  
+  * "Color sliders" (slider w. gradient in trough) instead of spinboxes
+  * Related colors (complement / triads / etc)
+    - dropdown list?
+  * Ability to save magnified images?
+  * Configure columns of palette view?
+
+  * Palette swatch reordering / dnd
+  * Rethink mouse bindings.
+    - left click/drag would be nice for dnd
+    - maybe use right click drag for magnifying/picking colors?
+  * Add about page with instructions on usage
+  * hex should be entry, not label...
