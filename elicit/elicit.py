@@ -295,7 +295,7 @@ class Elicit:
     self.color_name_entry = gtk.Entry()
     self.color_name_entry.set_sensitive(False)
     self.color_name_entry.connect('changed', self.color_name_entry_changed)
-    hbox.pack_start(self.color_name_entry, False)
+    hbox.pack_start(self.color_name_entry, True, True)
 
   def init_config(self):
     self.gconf = gconf.client_get_default()
