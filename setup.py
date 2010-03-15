@@ -12,7 +12,7 @@ class install_with_schemas(install):
 
 distutils.core.setup(
     name='elicit',
-    version='2.0',
+    version='2.0-pre1',
     description='Screen magnifier and color picker',
     author='Brian Mattern',
     author_email='rephorm@rephorm.com',
