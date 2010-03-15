@@ -1,1 +1,2 @@
-recursive-include elicit/data *.schemas *.png
+recursive-include elicit/data *.png 
+recursive-include data *.schemas *.desktop *.png 

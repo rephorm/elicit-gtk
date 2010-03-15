@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Elicit
+Comment=Magnify and select colors from any application
+Exec=elicit
+Icon=rephorm-elicit
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=Graphics;2DGraphics;RasterGraphics;GTK;
