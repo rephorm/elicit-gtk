@@ -163,6 +163,7 @@ class Elicit:
   def build_gui(self):
     self.win = gtk.Window()
     self.win.set_title("Elicit")
+    self.win.set_icon_name('rephorm-elicit')
     self.win.connect('destroy', self.quit, None)
 
     vbox = gtk.VBox(False, 5)
