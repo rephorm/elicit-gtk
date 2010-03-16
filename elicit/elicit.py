@@ -98,7 +98,7 @@ class Elicit:
     self.colorspin['h'].set_value(self.color.h)
     self.colorspin['s'].set_value(self.color.s)
     self.colorspin['v'].set_value(self.color.v)
-    self.hex_label.set_label(self.color.hex())
+    self.hex_entry.set_text(self.color.hex())
     if self.palette_view.selected and color.hex() != self.palette_view.selected.hex():
       self.palette_view.select(None)
 
@@ -121,6 +121,12 @@ class Elicit:
     elif spin == self.colorspin['v']:
       v = spin.get_value()
     self.color.set_hsv(h,s,v)
+
+  def hex_entry_changed(self, entry):
+    text = entry.get_text()
+    if ((text[0] == '#' and len(text) == 7) or
+        (text[0] != '#' and len(text) == 6)):
+      self.color.set_hex(text)
 
   def palette_combo_selected(self, combo, palette):
     if (self.palette != palette):
@@ -248,9 +254,13 @@ class Elicit:
       self.colorspin[type] = spin
       row += 1
 
-    self.hex_label = gtk.Label()
-    self.hex_label.set_selectable(True)
-    table.attach(self.hex_label,0,4,3,4,gtk.FILL,gtk.EXPAND,2,2)
+    self.hex_label = gtk.Label("Hex")
+    table.attach(self.hex_label,0,1,3,4,gtk.FILL,gtk.EXPAND,2,2)
+
+    self.hex_entry = gtk.Entry()
+    table.attach(self.hex_entry,1,4,3,4,gtk.FILL,gtk.EXPAND,2,2)
+    self.hex_entry.connect('changed', self.hex_entry_changed)
+
 
     sep = gtk.HSeparator()
     vbox.pack_start(sep, False)
