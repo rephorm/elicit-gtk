@@ -356,6 +356,9 @@ class Elicit:
     key, mod = gtk.accelerator_parse("<Ctrl>q")
     accel.connect_group(key, mod, gtk.ACCEL_VISIBLE, self.accel_quit)
 
+    key, mod = gtk.accelerator_parse("<Ctrl>w")
+    accel.connect_group(key, mod, gtk.ACCEL_VISIBLE, self.accel_quit)
+
     key, mod = gtk.accelerator_parse("<Ctrl>s")
     accel.connect_group(key, mod, gtk.ACCEL_VISIBLE, self.accel_save)
 
