@@ -24,12 +24,14 @@ if gtk.pygtk_version < (2,0):
 class Elicit:
   appname = 'elicit'
 
-  def quit(self, widget, data=None):
+  def save(self):
     old_filename = self.palette.filename
     self.palette.save()
     if old_filename == None:
       self.gconf.set_string('/apps/elicit/palette', os.path.basename(self.palette.filename))
 
+  def quit(self, widget, data=None):
+    self.save()
     gtk.main_quit()
 
   def main(self):
@@ -342,11 +344,30 @@ class Elicit:
     elif key == 'grab_rate':
       self.mag.set_grab_rate(entry.value.get_int())
 
+  def accel_quit(self, accel, window, keyval, mod):
+    self.quit(window)
+
+  def accel_save(self, accel, window, keyval, mod):
+    self.save()
+
+  def connect_accelerators(self):
+    accel = gtk.AccelGroup()
+
+    key, mod = gtk.accelerator_parse("<Ctrl>q")
+    accel.connect_group(key, mod, gtk.ACCEL_VISIBLE, self.accel_quit)
+
+    key, mod = gtk.accelerator_parse("<Ctrl>s")
+    accel.connect_group(key, mod, gtk.ACCEL_VISIBLE, self.accel_save)
+
+    self.win.add_accel_group(accel)
+
   def __init__(self):
     self.palette = None
     self.color = Color()
     self.color.connect('changed', self.color_changed)
     self.build_gui()
+
+    self.connect_accelerators()
 
     self.palette_dir = os.path.join(base.save_config_path(self.appname), 'palettes')
     Palette.PaletteDir = self.palette_dir
