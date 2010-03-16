@@ -21,12 +21,16 @@ class Palette(gobject.GObject):
     self.colors.append(color)
     self.emit('changed')
 
-  def insert_before(self, color, after):
-    self.colors.insert(s.index(after), color)
+  def insert_before(self, color, before):
+    self.colors.insert(s.index(before), color)
     self.emit('changed')
 
   def insert_after(self, color, after):
     self.colors.insert(s.index(after) + 1, color)
+    self.emit('changed')
+
+  def insert_at_index(self, color, index):
+    self.colors.insert(index, color)
     self.emit('changed')
 
   def prepend(self, color):
