@@ -31,6 +31,11 @@ class PaletteView(gtk.Widget):
     self.selected = None
 
     self.panning = False
+    self.dragging = False
+
+    self.drag_start = None
+    self.drag_color = None
+    self.drag_loc = None
 
   def select(self, color):
     self.selected = color
@@ -124,7 +129,16 @@ class PaletteView(gtk.Widget):
     self.style.attach(self.window)
     self.style.set_background(self.window, gtk.STATE_NORMAL)
     self.window.move_resize(*self.allocation)
+
     self.gc = self.window.new_gc()
+
+    self.gc_shadow = self.window.new_gc()
+    col = self.gc_shadow.get_colormap().alloc_color(214*257,214*257,214*257)
+    self.gc_shadow.set_foreground(col)
+
+    self.gc_border = self.window.new_gc()
+    col = self.gc_border.get_colormap().alloc_color(0,0,0)
+    self.gc_border.set_foreground(col)
 
     self.connect("motion-notify-event", self.cb_motion_notify)
     self.connect("button-press-event", self.cb_button_press)
@@ -162,31 +176,52 @@ class PaletteView(gtk.Widget):
 
     rect = gdk.Rectangle(x, y, size, size)
 
-    shadow_col = self.gc.get_colormap().alloc_color(214*257,214*257,214*257)
-    black_col = self.gc.get_colormap().alloc_color(0,0,0)
     for color in self.palette.colors:
-      fg_col = self.gc.get_colormap().alloc_color(color.r * 257, color.g * 257, color.b * 257)
+      #skip color being dragged
+      if color == self.drag_color: continue
 
-      r = rect.intersect(event.area)
+      # leave room for dragged color
+      if (self.direction == self.HORIZONTAL and self.dragging and
+          self.drag_loc[0] >= rect.x - self.padding and
+          self.drag_loc[0] < rect.x + rect.width + self.padding):
+        rect.x += rect.width + 2 * self.padding
 
-      # if interesection vanishes, don't draw anything
-      if r.width > 0 and r.height > 0:
-        #draw shadow
-        self.gc.set_foreground(shadow_col)
-        self.window.draw_rectangle(self.gc, True, r.x+1, r.y+1, r.width, r.height)
-        #draw swatch
-        self.gc.set_foreground(fg_col)
-        self.window.draw_rectangle(self.gc, True, *r)
+      elif (self.direction == self.VERTICAL and self.dragging and
+            self.drag_loc[1] >= rect.y - self.padding and
+            self.drag_loc[1] < rect.y + rect.height + self.padding):
+        rect.y += rect.height + 2 * self.padding
 
-        if self.selected == color:
-          self.gc.set_foreground(black_col)
-          self.window.draw_rectangle(self.gc, False, r.x,r.y,r.width-1,r.height-1)
+      self.draw_swatch(color, rect, event.area, self.selected == color)
 
-      if self.direction == self.HORIZONTAL: rect.x += rect.width + 2 * self.padding
-      else: rect.y += rect.height + 2 * self.padding
+      if self.direction == self.HORIZONTAL:
+        rect.x += rect.width + 2 * self.padding
+      else:
+        rect.y += rect.height + 2 * self.padding
+
+    if self.dragging:
+      rect.x = self.drag_loc[0] - rect.width / 2
+      rect.y = self.drag_loc[1] - rect.height / 2
+      self.draw_swatch(self.drag_color, rect, event.area, self.drag_color == self.selected)
+
+  def draw_swatch(self, color, rect, clip_rect, selected = False):
+    fg_col = self.gc.get_colormap().alloc_color(*color.rgb16())
+
+    r = rect.intersect(clip_rect)
+
+    # if interesection vanishes, don't draw anything
+    if r.width > 0 and r.height > 0:
+      #draw shadow
+      self.window.draw_rectangle(self.gc_shadow, True, r.x+1, r.y+1, r.width, r.height)
+      #draw swatch
+      self.gc.set_foreground(fg_col)
+      self.window.draw_rectangle(self.gc, True, *r)
+
+      if selected:
+        self.window.draw_rectangle(self.gc_border, False, rect.x,rect.y,rect.width-1,rect.height-1)
 
   def cb_button_press(self, widget, event):
     if event.button == 1:
+      self.drag_start = (event.x, event.y)
       pass
     elif event.button == 2:
       self.panning = True
@@ -199,9 +234,13 @@ class PaletteView(gtk.Widget):
 
   def cb_button_release(self, widget, event):
     if event.button == 1:
-      col = self.color_at(event.x, event.y)
-      if col:
-        self.select(col)
+      self.drag_start = None
+      if self.dragging:
+        self.drag_stop()
+      else:
+        col = self.color_at(event.x, event.y)
+        if col:
+          self.select(col)
     elif event.button == 2:
       self.panning = False
     elif event.button == 3:
@@ -223,6 +262,44 @@ class PaletteView(gtk.Widget):
         pan = pan_frac * (len(self.palette.colors) * self.allocation.width - self.allocation.height)
 
       self.set_pan(self.pan_start_pan + pan)
+
+    elif self.dragging:
+      loc = (event.x, event.y)
+      if self.drag_loc != loc:
+        self.drag_loc = loc
+        self.queue_draw()
+      else:
+        pass
+    elif self.drag_start:
+      diff = max(abs(event.x - self.drag_start[0]), abs(event.y - self.drag_start[1]))
+      if diff > 5:
+        self.drag_color = self.color_at(*self.drag_start)
+        self.dragging = True
+
+  def drag_stop(self):
+    self.palette.remove(self.drag_color)
+
+    if self.direction == self.HORIZONTAL:
+      size = int(self.allocation.height)
+      i = int(self.drag_loc[0] + self.pan) / size
+    else:
+      size = int(self.allocation.width)
+      i = int(self.drag_loc[1] + self.pan ) / size
+
+    if i < 0:
+      self.palette.prepend(self.drag_color)
+    elif i >= len(self.palette.colors):
+      self.palette.append(self.drag_color)
+    else:
+      self.palette.insert_at_index(self.drag_color, i)
+    
+    self.dragging = False
+    self.drag_color = None
+    self.drag_start = None
+    self.drag_loc = None
+
+    self.queue_draw()
+
 
   def cb_scroll(self, widget, event):
     if event.direction == gtk.gdk.SCROLL_DOWN or event.direction == gtk.gdk.SCROLL_RIGHT:
