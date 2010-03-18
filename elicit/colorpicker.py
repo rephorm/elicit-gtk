@@ -70,6 +70,9 @@ class ColorPicker(gtk.Widget):
     self.color.set_rgb(*color.rgb())
     return True
 
+  def cb_drag_get_color(self):
+    return self.color
+
   def pick(self, x, y):
     self.pick_x, self.pick_y = int(x), int(y)
 
@@ -134,7 +137,7 @@ class ColorPicker(gtk.Widget):
     self.connect("button-press-event", self.cb_button_press)
     self.connect("button-release-event", self.cb_button_release)
 
-    self.dnd_helper = ColorDndHelper(self, self.cb_drag_set_color)
+    self.dnd_helper = ColorDndHelper(self, self.cb_drag_set_color, self.cb_drag_get_color, gtk.gdk.BUTTON2_MASK)
 
     self.raw_width = 1
     self.raw_height = 1
