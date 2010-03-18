@@ -87,7 +87,8 @@ class PaletteList(gtk.ListStore):
 
   def palette_changed(self, palette):
     index = self.index_of_palette(palette)
-    self[index][3] = self.generate_pixbuf(palette)
+    if index != None:
+      self[index][3] = self.generate_pixbuf(palette)
 
 
 class PaletteCombo(gtk.ComboBoxEntry):

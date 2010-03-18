@@ -139,7 +139,8 @@ class Elicit:
         #update palette list with new filename
         if old_filename != self.palette.filename:
           index = self.palette_list.index_of_palette(self.palette)
-          self.palette_list[index][1] = self.palette.filename
+          if index != None:
+            self.palette_list[index][1] = self.palette.filename
 
       self.palette = palette
       self.palette_view.set_palette(self.palette)
