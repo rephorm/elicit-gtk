@@ -1,5 +1,22 @@
 import gobject
 
+"""
+  A note about RGB values
+
+  8 bit colors take on values x in [0,255)
+  16 bit colors take on values X in [0,65535]
+
+  So, a given 8 bit value x represents the entire 16 bit range [x*256, (x+1)*256]
+
+  Converting from 16->8 bit is straightforward. Just, divide by 256. However, converting the other direction is ambiguous. Which of the 256 possible 16 bit values should be assigned?  It is desirable to have the lowest values map to eachother, as well as the highest values. i.e. 0 <-> 0 and 255 <-> 65535. To obtain this, we multiply the 8 bit value by 257.
+
+  This gives X = x*257 = (x*256) + x.
+
+  Note that the middle value (127) gets mapped to the center of its 16 bit block.
+
+  Converting 16 -> 8 -> 16 causes a downward shift for low values and an upward shift for high values.
+"""
+
 class Color(gobject.GObject):
   __gsignals__ = {
       'changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ())
@@ -33,6 +50,9 @@ class Color(gobject.GObject):
     self.type = Color.RGB
     self.rgb_to_hsv()
     self.emit('changed')
+
+  def set_rgb16(self, r, g, b):
+    self.set_rgb(r/256, g/256, b/256)
 
   def set_hsv(self, h, s, v):
     if min(h,s,v) < 0 or max(s,v) > 1 or h > 360:
