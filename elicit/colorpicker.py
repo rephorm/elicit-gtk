@@ -34,7 +34,6 @@ class ColorPicker(gtk.Widget):
   def color_changed(self, color):
     if not self.flags() & gtk.REALIZED: return
 
-    print "color changed -> %d,%d,%d" % color.rgb()
     r,g,b = self.color.rgb16()
     col = self.gc.get_colormap().alloc_color(r, g, b, False, False)
     self.gc.set_foreground(col)
