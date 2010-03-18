@@ -6,6 +6,8 @@ import glib
 from palette import Palette
 from color import Color
 
+from color_dnd_helper import ColorDndHelper
+
 #    TODO: allow drag reordering of colors
 #          dnd of colors to other applications?
 
@@ -144,6 +146,8 @@ class PaletteView(gtk.Widget):
     self.connect("button-press-event", self.cb_button_press)
     self.connect("button-release-event", self.cb_button_release)
     self.connect("scroll-event", self.cb_scroll)
+
+    self.dnd_helper = ColorDndHelper(self, self.cb_drag_add_color)
 
   def do_unrealize(self):
     self.window.destroy()
@@ -306,5 +310,9 @@ class PaletteView(gtk.Widget):
       self.set_pan(self.pan + 10)
     if event.direction == gtk.gdk.SCROLL_UP or event.direction == gtk.gdk.SCROLL_LEFT:
       self.set_pan(self.pan - 10)
+
+  def cb_drag_add_color(self, color):
+    self.palette.append(color)
+    return True
 
 gobject.type_register(PaletteView)      
