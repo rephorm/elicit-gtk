@@ -4,23 +4,15 @@ import gtk.gdk as gdk
 import glib
 import pygtk
 import os
-import struct
 
 from color import Color
+from color_dnd_helper import ColorDndHelper
 
 if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
   raise SystemExit
 
 class ColorPicker(gtk.Widget):
-  TARGET_TYPE_COLOR = 1
-  TARGET_TYPE_TEXT  = 2
-
-  drag_targets = [
-      ("application/x-color", 0, TARGET_TYPE_COLOR),
-      ("text/plain", 0, TARGET_TYPE_TEXT),
-  ]
-
   data_path = os.path.join(os.path.dirname(__file__), 'data')
   icon_path = os.path.join(data_path, 'icons')
 
@@ -42,6 +34,7 @@ class ColorPicker(gtk.Widget):
   def color_changed(self, color):
     if not self.flags() & gtk.REALIZED: return
 
+    print "color changed -> %d,%d,%d" % color.rgb()
     r,g,b = self.color.rgb16()
     col = self.gc.get_colormap().alloc_color(r, g, b, False, False)
     self.gc.set_foreground(col)
@@ -74,6 +67,10 @@ class ColorPicker(gtk.Widget):
     self.pick_timeout = None
     return False
 
+  def cb_drag_set_color(self, color):
+    self.color.set_rgb(*color.rgb())
+    return True
+
   def pick(self, x, y):
     self.pick_x, self.pick_y = int(x), int(y)
 
@@ -102,45 +99,6 @@ class ColorPicker(gtk.Widget):
       if (y >= root_h): y = root_h - 1
 
       self.pick(x, y)
-
-  def cb_drag_motion(self, wid, context, x, y, time):
-    for target in self.drag_targets:
-      if target[0] in context.targets:
-        print "Found target: %s" % target[0]
-        context.drag_status(gtk.gdk.ACTION_COPY, time)
-        self.drag_highlight()
-        return True
-
-  def cb_drag_drop(self, wid, context, x, y, time):
-    for target in self.drag_targets:
-      if target[0] in context.targets:
-        self.drag_get_data(context, target[0], time)
-
-  def cb_drag_leave(self, wid, context, time):
-    self.drag_unhighlight()
-
-  def cb_drag_data_received(self, widget, context, x, y, selection, target_type, time):
-    success = False
-    if target_type == self.TARGET_TYPE_COLOR:
-      #XXX handle exceptions...
-      col = struct.unpack("HHHH", selection.data)
-      print col
-      try:
-        self.color.set_rgb16(*col[0:3])
-        success = True
-      except ValueError:
-        print("Invalid rgb data dropped")
-    elif target_type == self.TARGET_TYPE_TEXT:
-      try:
-        self.color.set_hex(selection.data)
-        success = True
-      except ValueError:
-        print("The text dropped does not represent a color")
-
-    print("Success: {0}".format(success))
-    context.drag_status(gtk.gdk.ACTION_DEFAULT, time)
-    context.finish(success, False, time)
-    return success
 
   def do_realize(self):
     self.set_flags(self.flags() | gtk.REALIZED)
@@ -177,11 +135,7 @@ class ColorPicker(gtk.Widget):
     self.connect("button-press-event", self.cb_button_press)
     self.connect("button-release-event", self.cb_button_release)
 
-    print self.drag_dest_set(0, self.drag_targets, gtk.gdk.ACTION_COPY)
-    self.connect('drag-motion', self.cb_drag_motion)
-    self.connect('drag-leave', self.cb_drag_leave)
-    self.connect('drag-drop', self.cb_drag_drop)
-    self.connect('drag-data-received', self.cb_drag_data_received)
+    self.dnd_helper = ColorDndHelper(self, self.cb_drag_set_color)
 
     self.raw_width = 1
     self.raw_height = 1
