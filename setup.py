@@ -3,6 +3,7 @@
 import distutils.core
 from distutils.command.install import install
 import os
+import elicit.appinfo as appinfo
 
 class install_with_schemas(install):
   def run(self):
@@ -16,14 +17,14 @@ class install_with_schemas(install):
     os.system('xdg-desktop-menu install data/rephorm-elicit.desktop')
 
 distutils.core.setup(
-    name='elicit',
-    version='2.0-pre2',
-    description='Screen magnifier and color picker',
-    author='Brian Mattern',
-    author_email='rephorm@rephorm.com',
-    url='http://www.rephorm.com/code/elicit',
-    packages=['elicit'],
-    package_data={'elicit': ['data/icons/*.png']},
+    name=appinfo.pkgname,
+    version=appinfo.version,
+    description=appinfo.description,
+    author=appinfo.author,
+    author_email=appinfo.author_email,
+    url=appinfo.website,
+    packages=[appinfo.pkgname],
+    package_data={appinfo.pkgname: ['data/icons/*.png']},
     scripts=['bin/elicit'],
     data_files=[('/usr/share/gconf/schemas', ['data/elicit.schemas'])],
     cmdclass={'install': install_with_schemas}

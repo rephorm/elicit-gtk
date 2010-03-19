@@ -6,6 +6,7 @@ import pygtk
 import gconf
 import os
 import math
+import appinfo
 
 import xdg.BaseDirectory as base
 
@@ -22,7 +23,6 @@ if gtk.pygtk_version < (2,0):
   raise SystemExit
 
 class Elicit:
-  appname = 'elicit'
 
   def save(self):
     old_filename = self.palette.filename
@@ -402,10 +402,10 @@ class Elicit:
 
   def action_about(self, action):
     a = gtk.AboutDialog()
-    a.set_name('Elicit')
-    a.set_version('2.0-pre3') #XXX get this from a common config file
-    a.set_website("http://www.rephorm.com/code/elicit")
-    a.set_authors(["Brian Mattern"])
+    a.set_name(appinfo.name)
+    a.set_version(appinfo.version)
+    a.set_website(appinfo.website)
+    a.set_authors([appinfo.author])
     a.set_logo_icon_name('rephorm-elicit')
 
     a.connect('response', lambda dialog,respons: dialog.destroy())
@@ -417,7 +417,7 @@ class Elicit:
     self.color.connect('changed', self.color_changed)
     self.build_gui()
 
-    self.palette_dir = os.path.join(base.save_config_path(self.appname), 'palettes')
+    self.palette_dir = os.path.join(base.save_config_path(appinfo.pkgname), 'palettes')
     Palette.PaletteDir = self.palette_dir
 
     self.palette_list = PaletteList()
