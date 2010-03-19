@@ -127,7 +127,6 @@ class ColorPicker(gtk.Widget):
     self.gc = self.window.new_gc()
     self.color_changed(self.color)
 
-    #XXX install cursor and use config path to load it
     pbuf = gdk.pixbuf_new_from_file(os.path.join(self.icon_path, "dropper.png"))
     if pbuf:
       self.cursor = gdk.Cursor(self.window.get_display(), pbuf, 8, 21);

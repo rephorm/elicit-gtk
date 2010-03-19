@@ -254,8 +254,6 @@ class Magnifier(gtk.Widget):
           | gdk.POINTER_MOTION_MASK
           | gdk.POINTER_MOTION_HINT_MASK)
 
-
-    #XXX install cursor and use config path to load it
     pbuf = gdk.pixbuf_new_from_file(os.path.join(self.icon_path,"magnify.png"))
     if pbuf:
       self.cursor = gdk.Cursor(self.window.get_display(), pbuf, 6, 6);

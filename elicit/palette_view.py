@@ -8,10 +8,6 @@ from color import Color
 
 from color_dnd_helper import ColorDndHelper
 
-#    FIXME: dragging between swatches should not do anything
-#    TODO: allow drag reordering of colors
-#          dnd of colors to other applications?
-
 class PaletteView(gtk.Widget):
   HORIZONTAL = 1
   VERTICAL = 2
