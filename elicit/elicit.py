@@ -30,7 +30,7 @@ class Elicit:
     if old_filename == None:
       self.gconf.set_string('/apps/elicit/palette', os.path.basename(self.palette.filename))
 
-  def quit(self, widget, data=None):
+  def quit(self, widget=None, data=None):
     self.save()
     gtk.main_quit()
 
@@ -167,6 +167,41 @@ class Elicit:
       self.palette_combo.remove(self.palette_list.index_of_palette(p))
       p.delete()
 
+  def build_menu(self):
+    uimanager = gtk.UIManager()
+    accelgroup = uimanager.get_accel_group()
+    self.win.add_accel_group(accelgroup)
+
+    actiongroup = gtk.ActionGroup('ElicitActions')
+    self.actiongroup = actiongroup
+
+    actiongroup.add_actions([
+      ('Quit', gtk.STOCK_QUIT, '_Quit', '<Ctrl>q', 'Quit Elicit', self.action_quit),
+      ('Save', gtk.STOCK_QUIT, '_Save', '<Ctrl>s', 'Save Palette', self.action_save),
+      ('About', gtk.STOCK_ABOUT, '_About', None, 'About Elicit', self.action_about),
+      ('File', None, '_File'),
+      ('Help', None, '_Help')
+      ])
+
+    uimanager.insert_action_group(actiongroup)
+    uimanager.add_ui_from_string("""
+    <ui>
+      <menubar name="ElicitMain">
+        <menu action="File">
+          <menuitem action="Save"/>
+          <menuitem action="Quit"/>
+        </menu>
+        <menu action="Help">
+          <menuitem action="About"/>
+        </menu>
+      </menubar>
+    </ui>
+    """)
+    menubar = uimanager.get_widget("/ElicitMain")
+    help = uimanager.get_widget("/ElicitMain/Help")
+    help.set_right_justified(True)
+    return menubar
+
   def build_gui(self):
     self.win = gtk.Window()
     self.win.set_title("Elicit")
@@ -175,6 +210,9 @@ class Elicit:
 
     vbox = gtk.VBox(False, 5)
     self.win.add(vbox)
+
+    menubar = self.build_menu()
+    vbox.pack_start(menubar, False)
 
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
@@ -356,33 +394,28 @@ class Elicit:
     elif key == 'grab_rate':
       self.mag.set_grab_rate(entry.value.get_int())
 
-  def accel_quit(self, accel, window, keyval, mod):
-    self.quit(window)
+  def action_quit(self, action):
+    self.quit()
 
-  def accel_save(self, accel, window, keyval, mod):
+  def action_save(self, action):
     self.save()
 
-  def connect_accelerators(self):
-    accel = gtk.AccelGroup()
+  def action_about(self, action):
+    a = gtk.AboutDialog()
+    a.set_name('Elicit')
+    a.set_version('2.0-pre3') #XXX get this from a common config file
+    a.set_website("http://www.rephorm.com/code/elicit")
+    a.set_authors(["Brian Mattern"])
+    a.set_logo_icon_name('rephorm-elicit')
 
-    key, mod = gtk.accelerator_parse("<Ctrl>q")
-    accel.connect_group(key, mod, gtk.ACCEL_VISIBLE, self.accel_quit)
-
-    key, mod = gtk.accelerator_parse("<Ctrl>w")
-    accel.connect_group(key, mod, gtk.ACCEL_VISIBLE, self.accel_quit)
-
-    key, mod = gtk.accelerator_parse("<Ctrl>s")
-    accel.connect_group(key, mod, gtk.ACCEL_VISIBLE, self.accel_save)
-
-    self.win.add_accel_group(accel)
+    a.connect('response', lambda dialog,respons: dialog.destroy())
+    a.show()
 
   def __init__(self):
     self.palette = None
     self.color = Color()
     self.color.connect('changed', self.color_changed)
     self.build_gui()
-
-    self.connect_accelerators()
 
     self.palette_dir = os.path.join(base.save_config_path(self.appname), 'palettes')
     Palette.PaletteDir = self.palette_dir
