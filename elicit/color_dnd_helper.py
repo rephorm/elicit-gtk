@@ -1,4 +1,5 @@
 import gtk
+import glib
 from color import Color
 import struct
 
@@ -17,6 +18,8 @@ class ColorDndHelper:
     self.cb_get_color = cb_get_color
 
     self.drag_color = None
+    self.swatch_size = 32
+    self.hot_x = self.hot_y = 0
 
     if self.cb_set_color:
       self.widget.drag_dest_set(0, self.drag_targets, gtk.gdk.ACTION_COPY)
@@ -32,6 +35,12 @@ class ColorDndHelper:
       self.widget.connect('drag-data-get', self.cb_drag_data_get)
       #self.widget.connect('drag-failed', self.cb_drag_failed)
 
+  def set_swatch_size(self, size):
+    self.swatch_size = size
+
+  def set_hot_spot(self, hot_x, hot_y):
+    self.hot_x = hot_x
+    self.hot_y = hot_y
 
   def cb_drag_motion(self, wid, context, x, y, time):
     for target in self.drag_targets:
@@ -84,7 +93,7 @@ class ColorDndHelper:
     return success
 
   def build_icon_pixbuf(self, color):
-    w = h = 32
+    w = h = self.swatch_size
     pb = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, 0, 8, w, h)
     pixels = pb.get_pixels_array()
 
@@ -104,7 +113,7 @@ class ColorDndHelper:
     if not self.drag_color: return False
 
     icon_pixbuf = self.build_icon_pixbuf(self.drag_color)
-    self.widget.drag_source_set_icon_pixbuf(self.build_icon_pixbuf(self.drag_color))
+    context.set_icon_pixbuf(icon_pixbuf, self.hot_x, self.hot_y)
 
     return True
 
