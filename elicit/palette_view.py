@@ -8,6 +8,7 @@ from color import Color
 
 from color_dnd_helper import ColorDndHelper
 
+#    FIXME: dragging between swatches should not do anything
 #    TODO: allow drag reordering of colors
 #          dnd of colors to other applications?
 
@@ -33,11 +34,10 @@ class PaletteView(gtk.Widget):
     self.selected = None
 
     self.panning = False
-    self.dragging = False
 
-    self.drag_start = None
     self.drag_color = None
     self.drag_loc = None
+    self.drag_is_move = False
 
   def select(self, color):
     self.selected = color
@@ -46,7 +46,6 @@ class PaletteView(gtk.Widget):
 
     self.queue_draw()
     self.emit('select-color', color)
-
 
   def set_pan(self, pan):
     if pan < 0: pan = 0
@@ -147,7 +146,12 @@ class PaletteView(gtk.Widget):
     self.connect("button-release-event", self.cb_button_release)
     self.connect("scroll-event", self.cb_scroll)
 
-    self.dnd_helper = ColorDndHelper(self, self.cb_drag_add_color)
+    self.connect("drag-motion", self.cb_drag_motion)
+    self.connect("drag-leave", self.cb_drag_leave)
+    self.connect("drag-data-delete", self.cb_drag_data_delete)
+    self.connect("drag-end", self.cb_drag_end)
+
+    self.dnd_helper = ColorDndHelper(self, self.cb_drag_add_color, self.cb_drag_get_color)
 
   def do_unrealize(self):
     self.window.destroy()
@@ -181,16 +185,16 @@ class PaletteView(gtk.Widget):
     rect = gdk.Rectangle(x, y, size, size)
 
     for color in self.palette.colors:
-      #skip color being dragged
-      if color == self.drag_color: continue
+      # skip color being dragged
+      if self.drag_is_move and color == self.drag_color: continue
 
       # leave room for dragged color
-      if (self.direction == self.HORIZONTAL and self.dragging and
+      if (self.direction == self.HORIZONTAL and self.drag_loc and
           self.drag_loc[0] >= rect.x - self.padding and
           self.drag_loc[0] < rect.x + rect.width + self.padding):
         rect.x += rect.width + 2 * self.padding
 
-      elif (self.direction == self.VERTICAL and self.dragging and
+      elif (self.direction == self.VERTICAL and self.drag_loc and
             self.drag_loc[1] >= rect.y - self.padding and
             self.drag_loc[1] < rect.y + rect.height + self.padding):
         rect.y += rect.height + 2 * self.padding
@@ -201,11 +205,6 @@ class PaletteView(gtk.Widget):
         rect.x += rect.width + 2 * self.padding
       else:
         rect.y += rect.height + 2 * self.padding
-
-    if self.dragging:
-      rect.x = self.drag_loc[0] - rect.width / 2
-      rect.y = self.drag_loc[1] - rect.height / 2
-      self.draw_swatch(self.drag_color, rect, event.area, self.drag_color == self.selected)
 
   def draw_swatch(self, color, rect, clip_rect, selected = False):
     fg_col = self.gc.get_colormap().alloc_color(*color.rgb16())
@@ -224,27 +223,23 @@ class PaletteView(gtk.Widget):
         self.window.draw_rectangle(self.gc_border, False, rect.x,rect.y,rect.width-1,rect.height-1)
 
   def cb_button_press(self, widget, event):
+    #XXX this should be "whichever button dragging is hooked up to",
+    #    rather than 1
     if event.button == 1:
-      self.drag_start = (event.x, event.y)
-      pass
+      self.drag_color = self.color_at(event.x, event.y)
     elif event.button == 2:
       self.panning = True
       self.pan_start = (event.x, event.y)
       self.pan_start_pan = self.pan
-      pass
     elif event.button == 3:
       pass
     pass
 
   def cb_button_release(self, widget, event):
     if event.button == 1:
-      self.drag_start = None
-      if self.dragging:
-        self.drag_stop()
-      else:
-        col = self.color_at(event.x, event.y)
-        if col:
-          self.select(col)
+      col = self.color_at(event.x, event.y)
+      if col:
+        self.select(col)
     elif event.button == 2:
       self.panning = False
     elif event.button == 3:
@@ -267,52 +262,47 @@ class PaletteView(gtk.Widget):
 
       self.set_pan(self.pan_start_pan + pan)
 
-    elif self.dragging:
-      loc = (event.x, event.y)
-      if self.drag_loc != loc:
-        self.drag_loc = loc
-        self.queue_draw()
-      else:
-        pass
-    elif self.drag_start:
-      diff = max(abs(event.x - self.drag_start[0]), abs(event.y - self.drag_start[1]))
-      if diff > 5:
-        self.drag_color = self.color_at(*self.drag_start)
-        self.dragging = True
-
-  def drag_stop(self):
-    self.palette.remove(self.drag_color)
-
-    if self.direction == self.HORIZONTAL:
-      size = int(self.allocation.height)
-      i = int(self.drag_loc[0] + self.pan) / size
-    else:
-      size = int(self.allocation.width)
-      i = int(self.drag_loc[1] + self.pan ) / size
-
-    if i < 0:
-      self.palette.prepend(self.drag_color)
-    elif i >= len(self.palette.colors):
-      self.palette.append(self.drag_color)
-    else:
-      self.palette.insert_at_index(self.drag_color, i)
-    
-    self.dragging = False
-    self.drag_color = None
-    self.drag_start = None
-    self.drag_loc = None
-
-    self.queue_draw()
-
-
   def cb_scroll(self, widget, event):
     if event.direction == gtk.gdk.SCROLL_DOWN or event.direction == gtk.gdk.SCROLL_RIGHT:
       self.set_pan(self.pan + 10)
     if event.direction == gtk.gdk.SCROLL_UP or event.direction == gtk.gdk.SCROLL_LEFT:
       self.set_pan(self.pan - 10)
 
-  def cb_drag_add_color(self, color):
-    self.palette.append(color)
+  def cb_drag_add_color(self, color, x, y):
+    if self.direction == self.HORIZONTAL:
+      size = int(self.allocation.height)
+      i = int(x + self.pan) / size
+    else:
+      size = int(self.allocation.width)
+      i = int(y + self.pan ) / size
+
+    if i < 0:
+      self.palette.prepend(color)
+    elif i >= len(self.palette.colors):
+      self.palette.append(color)
+    else:
+      self.palette.insert_at_index(color, i)
     return True
+
+  def cb_drag_get_color(self):
+    return self.drag_color
+
+  def cb_drag_motion(self, wid, context, x, y, time):
+    self.drag_loc = (x,y)
+
+    if context.get_source_widget() == self:
+      self.drag_is_move = True
+
+    return False
+
+  def cb_drag_leave(self, wid, context, time):
+    self.drag_loc = None
+    self.drag_is_move = False
+
+  def cb_drag_data_delete(self, widget, context):
+    self.palette.remove(self.drag_color)
+
+  def cb_drag_end(self, widget, context):
+    self.drag_color = None
 
 gobject.type_register(PaletteView)      

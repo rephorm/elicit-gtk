@@ -36,9 +36,16 @@ class ColorDndHelper:
   def cb_drag_motion(self, wid, context, x, y, time):
     for target in self.drag_targets:
       if target[0] in context.targets:
-        context.drag_status(gtk.gdk.ACTION_COPY, time)
+        action = gtk.gdk.ACTION_COPY
+
+        if context.get_source_widget() == self.widget:
+          action = gtk.gdk.ACTION_MOVE
+
+        context.drag_status(action, time)
         self.widget.drag_highlight()
         return True
+
+    return False
 
   def cb_drag_drop(self, wid, context, x, y, time):
     for target in self.drag_targets:
@@ -63,15 +70,16 @@ class ColorDndHelper:
         elif target_type == self.TARGET_TYPE_TEXT:
           color.set_hex(selection.data)
           valid = True
-          print("The text dropped does not represent a color")
       except ValueError, struct.error:
         print("Invalid data dropped")
 
-
     if valid:
-      success = self.cb_set_color(color)
+      success = self.cb_set_color(color, x, y)
 
-    context.finish(success, False, time)
+    if (success and context.action == gtk.gdk.ACTION_MOVE):
+      context.finish(success, True, time)
+    else:
+      context.finish(success, False, time)
 
     return success
 

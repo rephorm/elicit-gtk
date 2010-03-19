@@ -66,7 +66,7 @@ class ColorPicker(gtk.Widget):
     self.pick_timeout = None
     return False
 
-  def cb_drag_set_color(self, color):
+  def cb_drag_set_color(self, color, x, y):
     self.color.set_rgb(*color.rgb())
     return True
 
