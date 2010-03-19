@@ -12,6 +12,7 @@ class install_with_schemas(install):
     os.system('xdg-icon-resource install --size 16 data/icon/16/rephorm-elicit.png')
     os.system('xdg-icon-resource install --size 24 data/icon/24/rephorm-elicit.png')
     os.system('xdg-icon-resource install --size 32 data/icon/32/rephorm-elicit.png')
+    os.system('xdg-icon-resource install --size 48 data/icon/48/rephorm-elicit.png')
     os.system('xdg-desktop-menu install data/rephorm-elicit.desktop')
 
 distutils.core.setup(
