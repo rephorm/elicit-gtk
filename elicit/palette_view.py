@@ -299,6 +299,8 @@ class PaletteView(gtk.Widget):
       i = int(y + self.pan ) / size
 
     if self.drag_color:
+      # we're moving the color w/in the palette
+      color = self.drag_color
       self.palette.remove(self.drag_color)
       self.drag_removed = True
 
