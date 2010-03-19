@@ -198,8 +198,6 @@ class Elicit:
     </ui>
     """)
     menubar = uimanager.get_widget("/ElicitMain")
-    help = uimanager.get_widget("/ElicitMain/Help")
-    help.set_right_justified(True)
     return menubar
 
   def build_gui(self):
