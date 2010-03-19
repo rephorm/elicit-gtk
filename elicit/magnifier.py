@@ -317,7 +317,7 @@ class Magnifier(gtk.Widget):
       r2.width, r2.height,
       gdk.RGB_DITHER_NONE, 0, 0)
 
-    if (self.show_grid):
+    if self.show_grid and self.zoom != 1:
       x_off = (r.x - r2.x) % self.zoom
       y_off = (r.y - r2.y) % self.zoom
 
