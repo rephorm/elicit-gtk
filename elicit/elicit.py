@@ -22,6 +22,12 @@ if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
   raise SystemExit
 
+try:
+  import numpy
+except ImportError:
+  print "Numeric Python (numpy) is required."
+  raise SystemExit
+
 class Elicit:
 
   def save(self):
@@ -352,6 +358,7 @@ class Elicit:
     self.gconf.add_dir('/apps/elicit', preload=True)
     self.gconf_id = self.gconf.notify_add("/apps/elicit", self.config_changed)
 
+  def load_config(self):
     color = self.gconf.get_string('/apps/elicit/color')
     if color: self.color.set_hex(color)
 
@@ -413,6 +420,8 @@ class Elicit:
     self.palette = None
     self.color = Color()
     self.color.connect('changed', self.color_changed)
+
+    self.init_config()
     self.build_gui()
 
     self.palette_dir = os.path.join(base.save_config_path(appinfo.pkgname), 'palettes')
@@ -434,7 +443,7 @@ class Elicit:
 
     self.colorpicker.set_color(self.color)
 
-    self.init_config()
+    self.load_config()
 
 if __name__ == "__main__":
   el = Elicit();
