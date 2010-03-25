@@ -12,6 +12,8 @@ if gtk.pygtk_version < (2,0):
 
 
 class Magnifier(gtk.Widget):
+  TARGET_TYPE_IMAGE = 81
+
   data_path = os.path.join(os.path.dirname(__file__), 'data')
   icon_path = os.path.join(data_path, 'icons')
 
@@ -286,6 +288,18 @@ class Magnifier(gtk.Widget):
 
     self.pixbuf = gdk.Pixbuf(gdk.COLORSPACE_RGB, False, 8, self.pixbuf_width, self.pixbuf_height)
     self.raw_pixbuf = gdk.Pixbuf(gdk.COLORSPACE_RGB, False, 8, self.raw_width, self.raw_height)
+
+    target_list = gtk.target_list_add_image_targets(None, self.TARGET_TYPE_IMAGE, True)
+    self.drag_source_set(gtk.gdk.BUTTON3_MASK, target_list, gtk.gdk.ACTION_COPY)
+    self.connect("drag-data-get", self.cb_drag_data_get)
+
+
+  def cb_drag_data_get(self, widget, context, selection, target_type, time):
+    if not self.has_data:
+      return
+
+    if target_type == self.TARGET_TYPE_IMAGE:
+      selection.set_pixbuf(self.raw_pixbuf)
 
   def do_unrealize(self):
     self.window.destroy()
