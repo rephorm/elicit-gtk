@@ -26,6 +26,7 @@ class ColorPicker(gtk.Widget):
     self.color = Color()
     self.picking = 0
     self.pick_timeout = None
+    self.save_on_release = False
 
   def set_color(self, color):
     self.color = color
@@ -82,12 +83,18 @@ class ColorPicker(gtk.Widget):
   def cb_button_press(self, widget, event):
     if (event.button == 1):
       self.picking = True
-    if (event.button == 3):
-      self.emit('save-color')
+    elif (event.button == 3):
+      self.save_on_release = True
 
   def cb_button_release(self, widget, event):
     if (event.button == 1):
       self.picking = False
+    elif (event.button == 3 and self.save_on_release):
+      self.save_on_release = False
+      self.emit('save-color')
+
+  def cb_drag_begin(self, widget, event):
+    self.save_on_release = False
 
   def cb_motion_notify(self, widget, event):
     if (self.picking):
@@ -135,8 +142,9 @@ class ColorPicker(gtk.Widget):
     self.connect("motion-notify-event", self.cb_motion_notify)
     self.connect("button-press-event", self.cb_button_press)
     self.connect("button-release-event", self.cb_button_release)
+    self.connect("drag-begin", self.cb_drag_begin)
 
-    self.dnd_helper = ColorDndHelper(self, self.cb_drag_set_color, self.cb_drag_get_color, gtk.gdk.BUTTON2_MASK)
+    self.dnd_helper = ColorDndHelper(self, self.cb_drag_set_color, self.cb_drag_get_color, gtk.gdk.BUTTON3_MASK)
 
     self.raw_width = 1
     self.raw_height = 1
