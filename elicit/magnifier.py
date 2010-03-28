@@ -40,6 +40,11 @@ class Magnifier(gtk.Widget):
     self.measuring = False
     self.measure_rect = None
 
+    self.cursors = {}
+    self.cursor = None
+
+    self.set_flags(self.flags() |  gtk.CAN_FOCUS)
+
   def grab_immediate(self, x, y, w, h):
     self.screen_rect = gdk.Rectangle(x, y, w, h)
     self.pan_x = 0
@@ -135,12 +140,16 @@ class Magnifier(gtk.Widget):
     self.grab_timeout = None
     return False
     
-
   def grab(self, x, y, w, h):
     self.grab_rect = gdk.Rectangle(int(x), int(y), int(w), int(h))
 
     if (self.grab_timeout == None):
       self.grab_timeout = glib.timeout_add(1000 / self.grab_rate, self.cb_grab_timeout)
+
+  def set_cursor(self, type):
+    if self.cursor == self.cursors[type]: return
+    self.cursor = self.cursors[type]
+    self.window.set_cursor(self.cursor)
 
   def origin(self):
     x0 = (self.allocation.width - self.pixbuf_width)/2 + self.pan_x
@@ -257,9 +266,12 @@ class Magnifier(gtk.Widget):
           | gdk.POINTER_MOTION_HINT_MASK)
 
     pbuf = gdk.pixbuf_new_from_file(os.path.join(self.icon_path,"magnify.png"))
-    if pbuf:
-      self.cursor = gdk.Cursor(self.window.get_display(), pbuf, 6, 6);
-      self.window.set_cursor(self.cursor)
+    self.cursors['magnify'] = gdk.Cursor(self.window.get_display(), pbuf, 6, 6);
+
+    pbuf = gdk.pixbuf_new_from_file(os.path.join(self.icon_path,"measure.png"))
+    self.cursors['measure'] = gdk.Cursor(self.window.get_display(), pbuf, 6, 6);
+
+    self.set_cursor('magnify')
 
     self.pixbuf_width = int(self.allocation.width);
     self.pixbuf_height = int(self.allocation.height);
