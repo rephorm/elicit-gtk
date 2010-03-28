@@ -173,6 +173,7 @@ class Magnifier(gtk.Widget):
   def cb_button_press(self, widget, event):
     if event.button == 1:
       if event.state & gdk.CONTROL_MASK:
+        if not self.has_data: return
         self.measuring = True
         self.measure_start = (event.x, event.y)
         self.measure_rect = None
