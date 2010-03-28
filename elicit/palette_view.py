@@ -164,6 +164,8 @@ class PaletteView(gtk.Widget):
     self.dnd_helper = ColorDndHelper(self, self.cb_drag_add_color, self.cb_drag_get_color)
     self.drag_source_unset() #we will manually start drags
 
+    self.set_tooltip_text("Click and drag:\n  Left: DnD color\n  Middle: pan\n\nScroll: pan\nRight click: Remove color")
+
   def do_unrealize(self):
     self.window.destroy()
 
