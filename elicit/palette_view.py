@@ -37,6 +37,8 @@ class PaletteView(gtk.Widget):
     self.drag_is_move = False
     self.drag_removed = False
 
+    self.color_to_delete = None
+
   def select(self, color):
     self.selected = color
 
@@ -249,8 +251,7 @@ class PaletteView(gtk.Widget):
       self.pan_start = (event.x, event.y)
       self.pan_start_pan = self.pan
     elif event.button == 3:
-      pass
-    pass
+      self.color_to_delete = self.color_at(event.x, event.y)
 
   def cb_button_release(self, widget, event):
     if event.button == 1:
@@ -262,12 +263,13 @@ class PaletteView(gtk.Widget):
       self.panning = False
     elif event.button == 3:
       col = self.color_at(event.x, event.y)
-      if col:
+      if col and col == self.color_to_delete:
         if self.selected == col:
           self.select(None)
 
         self.emit('delete-color', col)
         self.set_pan(self.pan)
+      self.color_to_delete = None
 
   def cb_motion_notify(self, widget, event):
     if self.panning:
