@@ -139,6 +139,8 @@ class ColorPicker(gtk.Widget):
       self.cursor = gdk.Cursor(self.window.get_display(), pbuf, 8, 21);
       self.window.set_cursor(self.cursor)
 
+    self.set_tooltip_text('Click and drag:\n  Left: select color\n  Right: DnD color\n\nRight click: add to palette')
+
     self.connect("motion-notify-event", self.cb_motion_notify)
     self.connect("button-press-event", self.cb_button_press)
     self.connect("button-release-event", self.cb_button_release)
