@@ -323,12 +323,14 @@ class Elicit:
 
     button = gtk.Button()
     button.set_image(gtk.image_new_from_stock(gtk.STOCK_ADD,gtk.ICON_SIZE_BUTTON))
+    button.set_tooltip_text("Add Palette")
     button.set_relief(gtk.RELIEF_NONE)
     button.connect('clicked', self.add_palette)
     hbox.pack_start(button, False)
 
     button = gtk.Button()
     button.set_image(gtk.image_new_from_stock(gtk.STOCK_DELETE,gtk.ICON_SIZE_BUTTON))
+    button.set_tooltip_text("Delete Palette")
     button.set_relief(gtk.RELIEF_NONE)
     button.connect('clicked', self.delete_palette)
     hbox.pack_start(button, False)
