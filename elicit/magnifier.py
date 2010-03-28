@@ -23,6 +23,11 @@ class Magnifier(gtk.Widget):
       'measure-changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ()),
   }
 
+  tooltips = {
+      'magnify': 'Click and drag:\n  Left: magnify\n  Middle: pan\n  Right: DnD image\n\nScroll: zoom\n\n<Control>: measure',
+      'measure': 'Left click and drag to measure.',
+      }
+
   def __init__(self):
     super(Magnifier, self).__init__()
 
@@ -150,6 +155,7 @@ class Magnifier(gtk.Widget):
     if self.cursor == self.cursors[type]: return
     self.cursor = self.cursors[type]
     self.window.set_cursor(self.cursor)
+    self.set_tooltip_text(self.tooltips[type])
 
   def origin(self):
     x0 = (self.allocation.width - self.pixbuf_width)/2 + self.pan_x
