@@ -13,6 +13,17 @@ if gtk.pygtk_version < (2,0):
   raise SystemExit
 
 class ColorPicker(gtk.Widget):
+  """
+  A widget to select colors from the screen
+
+  This displays the currently selected color and handles grabbing a color
+  from anywhere on screen.
+
+  It also allows dragging and dropping of colors from and onto the widget.
+
+  Signals:
+    'save-color' - save the current color
+  """
   data_path = os.path.join(os.path.dirname(__file__), 'data')
   icon_path = os.path.join(data_path, 'icons')
 
@@ -21,6 +32,7 @@ class ColorPicker(gtk.Widget):
   }
 
   def __init__(self):
+    """ Initialize color picker """
     super(ColorPicker, self).__init__()
     self.pick_rate = 60
     self.color = Color()
@@ -29,10 +41,20 @@ class ColorPicker(gtk.Widget):
     self.save_on_release = False
 
   def set_color(self, color):
+    """
+    Set the color object to store selected colors in
+
+    This color object is updated when a new color is selected or dropped
+    on the widget.
+
+    To explicitly change the selected color, do not use this function, but
+    instead call set_rgb() or set_hsv() on the current color object.
+    """
     self.color = color
     self.color.connect('changed', self.color_changed)
 
   def color_changed(self, color):
+    """ Callback for color changes """
     if not self.flags() & gtk.REALIZED: return
 
     r,g,b = self.color.rgb16()
@@ -41,6 +63,12 @@ class ColorPicker(gtk.Widget):
     self.queue_draw()
 
   def pick_immediate(self, x, y):
+    """
+    Select the color at the specified pixel
+
+    The coordinates are relative to the screen.
+    """
+
     if self.flags() & gtk.REALIZED == False: return
 
     # grab raw screen data
@@ -58,6 +86,7 @@ class ColorPicker(gtk.Widget):
     self.color.set_rgb(r,g,b)
 
   def cb_pick_timeout(self):
+    """ Callback for pick timeout """
     # repeat time until we've realized the widget
     if self.flags() & gtk.REALIZED == False:
       return True
@@ -68,25 +97,36 @@ class ColorPicker(gtk.Widget):
     return False
 
   def cb_drag_set_color(self, color, x, y):
+    """ Drag set color callback """
     self.color.set_rgb(*color.rgb())
     return True
 
   def cb_drag_get_color(self):
+    """ Drag get color callback """
     return self.color
 
   def pick(self, x, y):
+    """
+    Select the color at the specified location
+
+    This does not immediately select the color, but instead sets a timeout
+    so that the color selection occurs at most self.pick_rate times per
+    second.
+    """
     self.pick_x, self.pick_y = int(x), int(y)
 
     if (self.pick_timeout == None):
       self.pick_timeout = glib.timeout_add(1000 / self.pick_rate, self.cb_pick_timeout)
 
   def cb_button_press(self, widget, event):
+    """ Callback for mouse button press events """
     if (event.button == 1):
       self.picking = True
     elif (event.button == 3):
       self.save_on_release = True
 
   def cb_button_release(self, widget, event):
+    """ Callback for mouse button release events """
     if (event.button == 1):
       self.picking = False
     elif (event.button == 3 and self.save_on_release):
@@ -94,9 +134,11 @@ class ColorPicker(gtk.Widget):
       self.emit('save-color')
 
   def cb_drag_begin(self, widget, event):
+    """ Callback for mouse drag begin events """
     self.save_on_release = False
 
   def cb_motion_notify(self, widget, event):
+    """ Callback from mouse motion notify events """
     if (self.picking):
       root_w, root_h = gdk.get_default_root_window().get_size()
       x = event.x_root
@@ -110,6 +152,7 @@ class ColorPicker(gtk.Widget):
       self.pick(x, y)
 
   def do_realize(self):
+    """ Realize the widget """
     self.set_flags(self.flags() | gtk.REALIZED)
 
     self.window = gdk.Window(
@@ -153,17 +196,25 @@ class ColorPicker(gtk.Widget):
     self.raw_pixbuf = gdk.Pixbuf(gdk.COLORSPACE_RGB, False, 8, self.raw_width, self.raw_height)
 
   def do_unrealize(self):
+    """ Unrealize widget """
     self.window.destroy()
 
   def do_size_request(self, requisition):
+    """ Set default size """
     requisition.height = 40
     requisition.width = 40
 
   def do_size_allocation(self, allocation):
+    """ Handle size changes """
     if self.flags() & gtk.REALIZED:
       self.window.move_resize(*allocation)
 
   def do_expose_event(self, event):
+    """
+    Draw the widget
+
+    Just a big rectangle of the currently selected color
+    """
     self.window.draw_rectangle(self.gc, True, 
         event.area.x, event.area.y,
         event.area.width, event.area.height)
