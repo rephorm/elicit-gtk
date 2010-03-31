@@ -18,6 +18,19 @@ import gobject
 """
 
 class Color(gobject.GObject):
+  """
+  A color value
+
+  Color values can be set using either RGB or HSV representations. Since
+  conversion between the two formats is not lossless, the format in
+  which the color was set is stored as its type parameter.
+
+  A name can also be set on the color.
+
+  This emits a 'changed' signal when the color is changed (changing the
+  name does not currently emit this signal).
+  The signal handler has a single parameter, the color object.
+  """
   __gsignals__ = {
       'changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ())
       }
@@ -27,17 +40,27 @@ class Color(gobject.GObject):
   HSV = 2
 
   def __init__(self):
+    """
+    Initialize a color
+
+    The default value is black, with unspecified type
+    """
     super(Color,self).__init__()
     self.type = self.UNSET
     self.name = "Unnamed"
     self.r = self.g = self.b = 0
     self.h = self.s = self.v = 0
-    pass
 
   def __string__(self):
+    """String representation as hex"""
     return self.hex()
 
   def set_rgb(self, r, g, b):
+    """
+    Set the color value using RGB values
+
+    All values are given as integers between 0 and 255 inclusive.
+    """
     if (min(r,g,b) < 0 or max(r,g,b) > 255):
       raise ValueError("Values must be between 0 and 255")
 
@@ -52,9 +75,24 @@ class Color(gobject.GObject):
     self.emit('changed')
 
   def set_rgb16(self, r, g, b):
+    """
+    Set the color value using 16 bit RGB values
+
+    All values are given as integers between 0 and 65535 inclusive.
+    This is currently just converted to 8 bit RGB, losing the additional
+    information.
+    """
     self.set_rgb(r/256, g/256, b/256)
 
   def set_hsv(self, h, s, v):
+    """
+    Set the color value in HSV format
+
+    The hue, h, is an integer between 0 and 360 inclusive.
+    The saturation, s, and value, v, are integers between 0 and 255
+    inclusive.
+    """
+
     if min(h,s,v) < 0 or max(s,v) > 1 or h > 360:
       raise ValueError("Hue must be between 0 and 360. Sat. and Val. must be between 0 and 1")
 
@@ -66,6 +104,15 @@ class Color(gobject.GObject):
     self.emit('changed')
 
   def set_hex(self, hex):
+    """
+    Set the color value using a hexidecimal string
+
+    The string may start with an optional hash "#", which is ignored.
+    The remaining characters are RRGGBB, where RR is the hexidecimal red
+    value between 00 and FF inclusive, and likewise for GG and BB.
+
+    The hex values may be given as upper or lower case.
+    """
     tmp = hex
     if tmp[0] == '#': tmp = tmp[1:]
     if len(tmp) != 6: raise ValueError("Invalid Hex format")
@@ -76,15 +123,26 @@ class Color(gobject.GObject):
     self.set_rgb(r,g,b)
 
   def rgb(self):
+    """Return the color as a triple of 8 bit integers, (r,g,b)"""
     return (self.r, self.g, self.b)
 
   def rgb16(self):
+    """Return the color as a triple of 16 bit integers, (r,g,b)"""
     return (self.r * 257, self.g * 257, self.b * 257)
 
   def hsv(self):
+    """Return the color as a triple, (h,s,v)"""
     return (self.h, self.s, self.v)
 
   def hex(self, uppercase=False, hash=True):
+    """
+    Return the color value as a hexidecimal RGB string.
+
+    Named parameters:
+      uppercase: boolean specifying whether hex letters should be uppercase
+                 or not
+      hash:      boolean specifying whether preceding # should be included
+    """
     if uppercase:
       format = "%02X%02X%02X"
     else:
@@ -94,6 +152,8 @@ class Color(gobject.GObject):
     return format % (self.r, self.g, self.b)
 
   def rgb_to_hsv(self):
+    """ Update the internal HSV values from the current RGB values."""
+
     col = (self.r, self.g, self.b)
     maxc = 0
     minc = 0
@@ -119,6 +179,7 @@ class Color(gobject.GObject):
     if (self.h < 0): self.h += 360
    
   def hsv_to_rgb(self):
+    """Update the internal RGB values from the current HSV values"""
     if (self.s == 0):
       self.r = self.g = self.b = int(255*self.v)
       return

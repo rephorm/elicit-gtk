@@ -3,6 +3,21 @@ from color import Color
 import os
 
 class Palette(gobject.GObject):
+  """
+  A palette is a collection of colors
+
+  Palettes are stored on disk in the GIMP palette format (.gpl).
+
+  Parameters:
+    colors: the list of colors
+    name: the name of the palette
+    columns: the number of columns to display (ignored, but saved in file)
+    filename: the full path to the palette file
+    load_errors: a list of errors encountered on load
+
+  Signals:
+    'changed' - emitted when a color is added or removed
+  """
   __gsignals__ = {
     'changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ())
     }
@@ -10,6 +25,7 @@ class Palette(gobject.GObject):
   PaletteDir = None
 
   def __init__(self):
+    """Initialize an empty palette"""
     super(Palette, self).__init__()
     self.name = "Untitled Palette"
     self.columns = 0
@@ -18,30 +34,41 @@ class Palette(gobject.GObject):
     self.colors = []
 
   def append(self, color):
+    """Ad a color to the end of the color list"""
     self.colors.append(color)
     self.emit('changed')
 
   def insert_before(self, color, before):
+    """Insert a color before another color"""
     self.colors.insert(s.index(before), color)
     self.emit('changed')
 
   def insert_after(self, color, after):
+    """Insert a color after another one"""
     self.colors.insert(s.index(after) + 1, color)
     self.emit('changed')
 
   def insert_at_index(self, color, index):
+    """Insert a color at a specified location in the color list"""
     self.colors.insert(index, color)
     self.emit('changed')
 
   def prepend(self, color):
+    """Add a color to the beginning of the color list"""
     self.colors[0:0] = color
     self.emit('changed')
 
   def remove(self, color):
+    """Remove a color from the color list"""
     self.colors.remove(color)
     self.emit('changed')
 
   def load(self, filename):
+    """
+    Load the palette from a file
+
+    The filename should be given as a the full path.
+    """
     self.colors = []
     self.load_errors = []
     self.filename = filename
@@ -85,6 +112,19 @@ class Palette(gobject.GObject):
     return (len(self.load_errors) == 0)
      
   def save(self, filename = None):
+    """
+    Save a palette to disk
+
+    If the filename specified is not a full path, the file is saved in the
+    default palette dir.
+
+    If the filename is not specified, a new file is formed from the palette
+    name by converting spaces to dashes and lowercasing. If a file of this
+    name already exists (in the default dir), a number is appended and
+    incremented until a unique filename is found.
+
+    self.filename is updated with the full path to the file.
+    """
     if filename:
       if filename == os.path.basename(filename):
         filename = os.path.join(self.PaletteDir, filename)
@@ -115,7 +155,7 @@ class Palette(gobject.GObject):
         f.write("%3d %3d %3d\t%s\n" % (c.r, c.g, c.b, c.name))
 
   def delete(self):
-    print self.filename
+    """Delete the palette file on disk"""
     if self.filename and os.path.exists(self.filename):
       os.unlink(self.filename)
 

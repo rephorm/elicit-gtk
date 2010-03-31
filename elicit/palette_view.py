@@ -9,6 +9,19 @@ from color import Color
 from color_dnd_helper import ColorDndHelper
 
 class PaletteView(gtk.Widget):
+  """
+  A widget to display a palette
+
+  The palette is displayed as either a horizontal or vertical list of
+  swatches.
+
+  Signals:
+    'select-color' - a color has been selected.
+    'delete-color' - a color should be deleted.
+
+  Both of these signal handlers are passed the color as an additional
+  parameter.
+  """
   HORIZONTAL = 1
   VERTICAL = 2
 
@@ -18,6 +31,7 @@ class PaletteView(gtk.Widget):
       }
 
   def __init__(self):
+    """Initialize empty palette view"""
     super(PaletteView, self).__init__()
 
     self.palette = None
@@ -40,6 +54,13 @@ class PaletteView(gtk.Widget):
     self.color_to_delete = None
 
   def select(self, color):
+    """
+    Select a color
+
+    Sets the currently selected color and pans so that the swatch is
+    entirely within view.
+    """
+
     self.selected = color
 
     if color: self.pan_to_color(color)
@@ -48,6 +69,13 @@ class PaletteView(gtk.Widget):
     self.emit('select-color', color)
 
   def set_pan(self, pan):
+    """
+    Set the pan
+
+    The pan is specified in pixels. A positive value moves the swatches
+    left or up depending on the direction.
+    """
+
     if pan < 0: pan = 0
 
     if self.direction == self.HORIZONTAL:
@@ -63,6 +91,9 @@ class PaletteView(gtk.Widget):
       self.queue_draw()
 
   def pan_to_color(self, color):
+    """
+    Pan so that the swatch corresponding to color is in view
+    """
     i = self.palette.colors.index(color)
 
     if self.direction == self.HORIZONTAL:
@@ -76,6 +107,11 @@ class PaletteView(gtk.Widget):
         self.set_pan(pan)
 
   def color_location(self, color):
+    """
+    Find the top left corner of a color swatch relative to the widget
+
+    The value is returned as a tuple (x,y)
+    """
     i = self.palette.colors.index(color)
 
     if self.direction == self.HORIZONTAL:
@@ -89,6 +125,12 @@ class PaletteView(gtk.Widget):
 
 
   def color_at(self, x, y):
+    """
+    Find the color swatch displayed at a given coordinate
+
+    If a swatch is displayed at this coordinate, the corresponding color is
+    returned. Otherwise None is returned.
+    """
     if self.direction == self.HORIZONTAL:
       if y < self.padding or y > self.allocation.height - self.padding:
         return None
@@ -113,15 +155,20 @@ class PaletteView(gtk.Widget):
     return None
 
   def palette_changed(self, palette):
+    """Specify that the palette needs to be redrawn"""
     self.queue_draw()
 
   def set_palette(self, palette):
+    """
+    Set the palette to display
+    """
     self.palette = palette
     self.palette.connect('changed', self.palette_changed)
     self.set_pan(self.pan)
     self.queue_draw()
 
   def do_realize(self):
+    """Realize the widget"""
     self.set_flags(self.flags() | gtk.REALIZED)
 
     self.window = gdk.Window(
@@ -169,17 +216,33 @@ class PaletteView(gtk.Widget):
     self.set_tooltip_text("Click and drag:\n  Left: DnD color\n  Middle: pan\n\nScroll: pan\nRight click: Remove color")
 
   def do_unrealize(self):
+    """Unrealize the widget"""
     self.window.destroy()
 
   def do_size_request(self, requisition):
+    """Set the default size"""
     requisition.height = 25
     requisition.width = 25
 
   def do_size_allocation(self, allocation):
+    """Handle size changes"""
     if self.flags() & gtk.REALIZED:
       self.window.move_resize(*allocation)
 
   def do_expose_event(self, event):
+    """
+    Draw the widget
+
+    Each swatch is centered in a square the size of the widget height for a
+    horizontal palette or width for a vertical palette. The swatch is
+    smaller than this size by twice the current padding.
+
+    A simple shadow is drawn behind the swatch and the currently selected
+    swatch is outlined.
+
+    When dragging a color over the palette, an empty space is left to
+    indicate where the new swatch would be added if dropped.
+    """
     if not self.palette:
       return
 
@@ -224,6 +287,9 @@ class PaletteView(gtk.Widget):
         rect.y += rect.height + 2 * self.padding
 
   def draw_swatch(self, color, rect, clip_rect, selected = False):
+    """
+    Draw a swatch in the specified rectangle
+    """
     fg_col = self.gc.get_colormap().alloc_color(*color.rgb16())
 
     r = rect.intersect(clip_rect)
@@ -240,6 +306,7 @@ class PaletteView(gtk.Widget):
         self.window.draw_rectangle(self.gc_border, False, rect.x,rect.y,rect.width-1,rect.height-1)
 
   def cb_button_press(self, widget, event):
+    """ Callback for mouse button press events """
     #XXX this should be "whichever button dragging is hooked up to",
     #    rather than 1
     if event.button == 1:
@@ -254,6 +321,7 @@ class PaletteView(gtk.Widget):
       self.color_to_delete = self.color_at(event.x, event.y)
 
   def cb_button_release(self, widget, event):
+    """ Callback for mouse button release events """
     if event.button == 1:
       col = self.color_at(event.x, event.y)
       if col:
@@ -272,6 +340,7 @@ class PaletteView(gtk.Widget):
       self.color_to_delete = None
 
   def cb_motion_notify(self, widget, event):
+    """ Callback for mouse motion notify events """
     if self.panning:
       if self.direction == self.HORIZONTAL:
         pan_frac = 2 * (event.x - self.pan_start[0])/ self.allocation.width
@@ -289,12 +358,14 @@ class PaletteView(gtk.Widget):
         self.drag_begin(self.dnd_helper.drag_targets, gtk.gdk.ACTION_COPY|gtk.gdk.ACTION_MOVE, 1, event)
 
   def cb_scroll(self, widget, event):
+    """ Callback for mouse wheel scroll events """
     if event.direction == gtk.gdk.SCROLL_DOWN or event.direction == gtk.gdk.SCROLL_RIGHT:
       self.set_pan(self.pan + 10)
     if event.direction == gtk.gdk.SCROLL_UP or event.direction == gtk.gdk.SCROLL_LEFT:
       self.set_pan(self.pan - 10)
 
   def cb_drag_add_color(self, color, x, y):
+    """ Callback to handle a color dropped on the palette view """
     if self.direction == self.HORIZONTAL:
       size = int(self.allocation.height)
       i = int(x + self.pan) / size
@@ -317,9 +388,11 @@ class PaletteView(gtk.Widget):
     return True
 
   def cb_drag_get_color(self):
+    """ Callback to return the color being dragged """
     return self.drag_color
 
   def cb_drag_motion(self, wid, context, x, y, time):
+    """ Callback for mouse motion over widget while dragging """
     self.drag_loc = (x,y)
 
     if context.get_source_widget() == self:
@@ -328,14 +401,17 @@ class PaletteView(gtk.Widget):
     return False
 
   def cb_drag_leave(self, wid, context, time):
+    """ Callback for mouse leaving widget while dragging """
     self.drag_loc = None
     self.drag_is_move = False
 
   def cb_drag_data_delete(self, widget, context):
+    """ Callback for drag delete events (when moving a color via dnd) """
     if not self.drag_removed:
       self.palette.remove(self.drag_color)
 
   def cb_drag_end(self, widget, context):
+    """ Callback for a drag ending """
     self.drag_color = None
     self.drag_removed = False
 

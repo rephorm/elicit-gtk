@@ -1,3 +1,8 @@
+"""
+This module holds information about the application for use in the about
+dialog and for packaging.
+"""
+
 name = 'Elicit'
 pkgname = 'elicit'
 version = '2.0'

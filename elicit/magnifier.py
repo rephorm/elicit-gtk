@@ -12,6 +12,21 @@ if gtk.pygtk_version < (2,0):
 
 
 class Magnifier(gtk.Widget):
+  """
+  Magnifier Widget
+
+  A widget to handle magnification of regions of the screen.
+
+  Parameters:
+    zoom: the magnification level
+    show_grid: whether to draw a pixel grid or not
+    grab_rate: the rate at which to update the magnified image
+
+  Emits the following signals:
+    'zoom-changed'
+    'grid-toggled'
+    'measure-changed'
+  """
   TARGET_TYPE_IMAGE = 81
 
   data_path = os.path.join(os.path.dirname(__file__), 'data')
@@ -29,6 +44,7 @@ class Magnifier(gtk.Widget):
       }
 
   def __init__(self):
+    """Initialized the widget"""
     super(Magnifier, self).__init__()
 
     self.zoom = 5
@@ -51,6 +67,19 @@ class Magnifier(gtk.Widget):
     self.set_flags(self.flags() |  gtk.CAN_FOCUS)
 
   def grab_immediate(self, x, y, w, h):
+    """
+    Copy pixels from the region specified by (x,y,w,h) into internal pixbuf
+
+    The coordinates are relative to the screen in units of pixels.
+
+    The grabbed image data is stored in raw_pixbuf.
+
+    This involves copying image data from the server to the client and thus
+    is not the quickest of operations.
+    Do not call more often than necessary.
+    """
+
+
     self.screen_rect = gdk.Rectangle(x, y, w, h)
     self.pan_x = 0
     self.pan_y = 0
@@ -74,6 +103,14 @@ class Magnifier(gtk.Widget):
     self.scale()
 
   def scale(self):
+    """
+    Scale grabbed image data by zoom factor
+
+    The image data in raw_pixbuf is scaled by the zoom factor and the scaled
+    image data is stored in pixbuf.
+
+    This queues the widget to be redrawn.
+    """
     if self.has_data == False: return
 
     if (self.pixbuf_height != self.raw_height * self.zoom or
@@ -92,12 +129,14 @@ class Magnifier(gtk.Widget):
     self.queue_draw()
 
   def set_show_grid(self, show_grid):
+    """Set whether to show pixel grid or not"""
     if (self.show_grid != show_grid):
       self.show_grid = show_grid
       self.emit("grid-toggled")
       self.queue_draw()
 
   def set_zoom(self, zoom):
+    """Set zoom factor"""
     zoom = int(zoom)
     if (zoom <= 0): zoom = 1
     if (self.zoom != zoom):
@@ -106,6 +145,14 @@ class Magnifier(gtk.Widget):
       self.scale()
 
   def pan(self, pan_x, pan_y):
+    """
+    Set current pan
+
+    The pan is specified as a pixel offset in the x and y directions.
+
+    At 0 pan, the magnified image is centered within the widget allocation.
+    A positive pan moves the image right / down.
+    """
     pan_x = int(pan_x)
     pan_y = int(pan_y)
     xmax = (self.pixbuf_width - self.allocation.width) / 2
@@ -130,12 +177,23 @@ class Magnifier(gtk.Widget):
     self.queue_draw()
 
   def set_grab_rate(self, grab_rate):
+    """
+    Set the maximum rate at which to grab pixel data
+
+    The grab rate is specified in grabs per second.
+    This is ignored when using grab_immediate()
+    """
     grab_rate = int(grab_rate)
     if grab_rate <= 0: return
     if self.grab_rate != grab_rate:
       self.grab_rate = grab_rate
 
   def cb_grab_timeout(self):
+    """
+    The timeout callback for grab()
+
+    This calls grab_immediate unless the widget is not yet realized.
+    """
     # repeat time until we've realized the widget
     if self.flags() & gtk.REALIZED == False:
       return True
@@ -144,33 +202,73 @@ class Magnifier(gtk.Widget):
     self.grab_immediate(*self.grab_rect)
     self.grab_timeout = None
     return False
-    
+
   def grab(self, x, y, w, h):
+    """
+    Grab a region of the screen specified by (x,y,w,h)
+
+    The region is in screen coordinates.
+    After storing the region, a timeout is added so that the grunt work
+    of actually grabbing the screen data occurs at most every
+    1/grab_rate seconds.
+    """
     self.grab_rect = gdk.Rectangle(int(x), int(y), int(w), int(h))
 
     if (self.grab_timeout == None):
       self.grab_timeout = glib.timeout_add(1000 / self.grab_rate, self.cb_grab_timeout)
 
   def set_cursor(self, type):
+    """
+    Set the cursor to display when over the widget
+
+    There are currently two types:
+      'magnify' - a magnifying glass
+      'measure' - a ruler
+    """
     if self.cursor == self.cursors[type]: return
     self.cursor = self.cursors[type]
     self.window.set_cursor(self.cursor)
     self.set_tooltip_text(self.tooltips[type])
 
   def origin(self):
+    """
+    Calculate the origin of the magnified image
+
+    The origin (top left corner) is returned as a tuple (x0,y0) relative
+    to the widget.
+    """
     x0 = (self.allocation.width - self.pixbuf_width)/2 + self.pan_x
     y0 = (self.allocation.height - self.pixbuf_height)/2 + self.pan_y
     return (x0,y0)
 
   def coord_widget_to_pixbuf(self, x, y):
+    """
+    Convert widget coordinates to pixbuf coordinates
+
+    This finds the pixel of raw_pixbuf that is displayed at the provided
+    coordinate.
+    """
     x0,y0 = self.origin()
     return (int((x - x0) / self.zoom), int((y - y0) / self.zoom))
 
   def coord_pixbuf_to_widget(self, x, y):
+    """
+    Convert pixbuf coordinates to widget coordinates
+
+    This finds the location relative to the widget at which the provided
+    pixel of raw_pixbuf is displayed.
+    """
     x0,y0 = self.origin()
     return (x * self.zoom + x0, y * self.zoom + y0)
 
   def cb_button_press(self, widget, event):
+    """
+    Callback for mouse button press events
+
+    The left button starts magnification
+    Ctrl-left starts measuring on the magnified image
+    The middle button starts panning
+    """
     if event.button == 1:
       if event.state & gdk.CONTROL_MASK:
         if not self.has_data: return
@@ -187,6 +285,17 @@ class Magnifier(gtk.Widget):
       self.pan_start_y = event.y - self.pan_y
 
   def cb_scroll(self, widget, event):
+    """
+    Callback for mouse wheel scroll events
+
+    Changes the zoom factor by one in the direction scrolled.
+    Scroll up zooms in, down zooms out.
+
+    The pan value is also updated so that the pixel of the raw_pixbuf
+    that is under the mouse when the event is received remains under
+    the mouse. This allows one to zoom in on a specific region by moving
+    the mouse there before scrolling.
+    """
     old_zoom = zoom = self.zoom
 
     if (event.direction == gdk.SCROLL_UP):
@@ -213,6 +322,11 @@ class Magnifier(gtk.Widget):
     self.pan(pan_x, pan_y)
 
   def cb_button_release(self, widget, event):
+    """
+    Callback for mouse button release events
+
+    Stops magnifying, measuring or panning.
+    """
     if event.button == 1:
       self.measuring = False
       self.grabbing = False
@@ -220,6 +334,17 @@ class Magnifier(gtk.Widget):
       self.panning = False
 
   def cb_motion_notify(self, widget, event):
+    """
+    Callback for mouse motion notify events
+
+    If magnifying, calculates the size of a region centered on the
+    mouse cursor that is just large enough to fill the widget when
+    scaled up by the zoom factor. Then queues a grab of this region.
+
+    If measuring, updates measurement rectangle.
+
+    If panning, updates pan.
+    """
     if self.grabbing:
       root_w, root_h = gdk.get_default_root_window().get_size()
       w = int(math.ceil(float(self.allocation.width) / self.zoom))
@@ -256,6 +381,12 @@ class Magnifier(gtk.Widget):
         self.queue_draw()
 
   def do_realize(self):
+    """
+    Realize the widget
+
+    This creates the server resources (gdk window, cursors, pixbufs, etc)
+    and sets up drag and drop handlers
+    """
     self.set_flags(self.flags() | gtk.REALIZED)
 
     self.window = gdk.Window(
@@ -324,14 +455,30 @@ class Magnifier(gtk.Widget):
     self.window.destroy()
 
   def do_size_request(self, requisition):
+    """
+    Specify default size
+    """
     requisition.height = 200
     requisition.width = 220
 
   def do_size_allocation(self, allocation):
+    """
+    Handle size changes
+    """
     if self.flags() & gtk.REALIZED:
       self.window.move_resize(*allocation)
 
   def do_expose_event(self, event):
+    """
+    Draw the widget
+
+    The scaled pixbuf is initially centered within the widget, and then
+    offset by the current pan value.
+
+    On top of this, a grid indicating the pixel size is drawn if draw_grid is true.
+
+    Finally, a dashed box is drawn if a measurement is currently active.
+    """
     if self.has_data == False: return
 
     # center image in given space
@@ -350,6 +497,8 @@ class Magnifier(gtk.Widget):
       r2.width, r2.height,
       gdk.RGB_DITHER_NONE, 0, 0)
 
+    # the pixel grid is not drawn if zoom is 1, since it would fill the
+    # entire image area
     if self.show_grid and self.zoom != 1:
       x_off = (r.x - r2.x) % self.zoom
       y_off = (r.y - r2.y) % self.zoom
