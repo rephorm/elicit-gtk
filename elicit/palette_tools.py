@@ -93,6 +93,7 @@ class PaletteList(gtk.ListStore):
       if row[2] == palette:
         return index
       index += 1
+    return None
 
   def index_of_file(self, file):
     """
