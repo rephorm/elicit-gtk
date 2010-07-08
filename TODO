@@ -10,3 +10,11 @@ Things left to do (unprioritized):
     - left click/drag would be nice for dnd
     - maybe use right click drag for magnifying/picking colors?
   * Add about page with instructions on usage
+
+  * Averaged color selection over
+
+Bugs:
+
+  * Cursor doesn't change immediately when using mag / colorpicker buttons
+
+  * When picking color over magnified shot, use image data, not screen data (so grid doesn't get selected)
