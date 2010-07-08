@@ -173,9 +173,19 @@ class Elicit:
       self.palette_combo.remove(self.palette_list.index_of_palette(p))
       p.delete()
 
+  def select_color_clicked(self, button):
+    sel_action = self.actiongroup.get_action("Select Color")
+    sel_action.activate()
+
+
+  def magnify_clicked(self, button):
+    mag_action = self.actiongroup.get_action("Magnify")
+    mag_action.activate()
+
   def build_menu(self):
     uimanager = gtk.UIManager()
     accelgroup = uimanager.get_accel_group()
+    self.accelgroup = accelgroup
     self.win.add_accel_group(accelgroup)
 
     actiongroup = gtk.ActionGroup('ElicitActions')
@@ -237,8 +247,29 @@ class Elicit:
     self.mag.connect('grid-toggled', self.mag_grid_toggled)
     self.mag.connect('measure-changed', self.mag_measure_changed)
 
+    hbox = gtk.HBox(False, 0)
+    vbox.pack_start(hbox, False)
+
     self.measure_label = gtk.Label()
-    vbox.pack_start(self.measure_label, False)
+    hbox.pack_start(self.measure_label, True)
+
+    icon_path = os.path.join(os.path.dirname(__file__), 'data', 'icons')
+
+    button = gtk.Button()
+    button.set_relief(gtk.RELIEF_NONE)
+    img = gtk.Image()
+    img.set_from_file(os.path.join(icon_path, "dropper-button.png"));
+    button.set_image(img)
+    button.connect('clicked', self.select_color_clicked);
+    hbox.pack_end(button, False)
+
+    button = gtk.Button()
+    button.set_relief(gtk.RELIEF_NONE)
+    img = gtk.Image()
+    img.set_from_file(os.path.join(icon_path, "magnify-button.png"));
+    button.set_image(img)
+    button.connect('clicked', self.magnify_clicked);
+    hbox.pack_end(button, False)
 
     hbox = gtk.HBox(False, 5)
     vbox.pack_start(hbox, False)
