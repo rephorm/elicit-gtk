@@ -261,6 +261,16 @@ class Magnifier(gtk.Widget):
     x0,y0 = self.origin()
     return (x * self.zoom + x0, y * self.zoom + y0)
 
+  def grab_start(self):
+    self.grabbing = True
+    gdk.pointer_grab(self.window, True, gdk.POINTER_MOTION_MASK | gdk.BUTTON_PRESS_MASK | gdk.BUTTON_RELEASE_MASK, None, None, 0L)
+    self.grab_add()
+
+  def grab_stop(self):
+    self.grabbing = False
+    gdk.pointer_ungrab()
+    self.grab_remove()
+
   def cb_button_press(self, widget, event):
     """
     Callback for mouse button press events
@@ -278,7 +288,7 @@ class Magnifier(gtk.Widget):
         self.emit('measure-changed')
         self.queue_draw()
       else:
-        self.grabbing = True
+        self.grab_start()
     elif event.button == 2:
       self.panning = True
       self.pan_start_x = event.x - self.pan_x
@@ -329,7 +339,8 @@ class Magnifier(gtk.Widget):
     """
     if event.button == 1:
       self.measuring = False
-      self.grabbing = False
+      if self.grabbing:
+        self.grab_stop()
     elif event.button == 2:
       self.panning = False
 

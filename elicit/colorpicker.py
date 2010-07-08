@@ -118,9 +118,21 @@ class ColorPicker(gtk.Widget):
     if (self.pick_timeout == None):
       self.pick_timeout = glib.timeout_add(1000 / self.pick_rate, self.cb_pick_timeout)
 
+
+  def pick_start(self):
+    self.picking = True
+    gdk.pointer_grab(self.window, True, gdk.POINTER_MOTION_MASK | gdk.BUTTON_PRESS_MASK | gdk.BUTTON_RELEASE_MASK, None, None, 0L)
+    self.grab_add()
+
+  def pick_stop(self):
+    self.picking = False
+    gdk.pointer_ungrab()
+    self.grab_remove()
+
   def cb_button_press(self, widget, event):
     """ Callback for mouse button press events """
     if (event.button == 1):
+      self.pick_start
       self.picking = True
     elif (event.button == 3):
       self.save_on_release = True
@@ -128,7 +140,8 @@ class ColorPicker(gtk.Widget):
   def cb_button_release(self, widget, event):
     """ Callback for mouse button release events """
     if (event.button == 1):
-      self.picking = False
+      if self.picking:
+        self.pick_stop()
     elif (event.button == 3 and self.save_on_release):
       self.save_on_release = False
       self.emit('save-color')

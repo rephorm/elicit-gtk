@@ -185,7 +185,10 @@ class Elicit:
       ('Quit', gtk.STOCK_QUIT, '_Quit', '<Ctrl>q', 'Quit Elicit', self.action_quit),
       ('Save', gtk.STOCK_QUIT, '_Save', '<Ctrl>s', 'Save Palette', self.action_save),
       ('About', gtk.STOCK_ABOUT, '_About', None, 'About Elicit', self.action_about),
+      ('Magnify', gtk.STOCK_ABOUT, '_Magnify', '<Ctrl>z', 'Start Magnifying', self.action_magnify),
+      ('Select Color', gtk.STOCK_ABOUT, 'Select _Color', '<Ctrl>c', 'Start Selecting Color', self.action_pick_color),
       ('File', None, '_File'),
+      ('Action', None, '_Action'),
       ('Help', None, '_Help')
       ])
 
@@ -196,6 +199,10 @@ class Elicit:
         <menu action="File">
           <menuitem action="Save"/>
           <menuitem action="Quit"/>
+        </menu>
+        <menu action="Action">
+          <menuitem action="Magnify"/>
+          <menuitem action="Select Color"/>
         </menu>
         <menu action="Help">
           <menuitem action="About"/>
@@ -419,6 +426,12 @@ class Elicit:
 
     a.connect('response', lambda dialog,respons: dialog.destroy())
     a.show()
+
+  def action_magnify(self, action):
+    self.mag.grab_start()
+
+  def action_pick_color(self, action):
+    self.colorpicker.pick_start()
 
   def cb_key_press(self, widget, event):
     if event.keyval in self.keyval_control:
