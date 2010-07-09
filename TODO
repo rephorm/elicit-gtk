@@ -11,3 +11,4 @@ Things left to do (unprioritized):
   * Averaged color selection over configurable radius
 
 Bugs:
+  While magnifying or picking colors, can initiated other one using keyboard. After clicking, initially started mode continues and can only be canceled by clicking back on its button.
