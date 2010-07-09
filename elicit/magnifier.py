@@ -26,6 +26,7 @@ class Magnifier(gtk.Widget):
     'zoom-changed'
     'grid-toggled'
     'measure-changed'
+    'location-changed'
   """
   TARGET_TYPE_IMAGE = 81
 
@@ -36,6 +37,7 @@ class Magnifier(gtk.Widget):
       'zoom-changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ()),
       'grid-toggled': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ()),
       'measure-changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ()),
+      'location-changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ()),
   }
 
   tooltip = 'Click and drag:\n  Left: drag-n-drop image\n  Middle: pan\n  Right: measure\n\nScroll: zoom'
@@ -97,6 +99,7 @@ class Magnifier(gtk.Widget):
         0, 0,
         self.screen_rect.width, self.screen_rect.height)
 
+    self.emit('location-changed')
     self.has_data = True
 
     self.scale()

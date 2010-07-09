@@ -60,7 +60,7 @@ class Elicit:
 
   def mag_measure_changed(self, mag):
     if mag.measure_rect:
-      text = "%d x %d (%.1f diag)" % (mag.measure_rect.width,
+      text = "[%dx%d] (%.1f diag) " % (mag.measure_rect.width,
           mag.measure_rect.height,
           math.sqrt(mag.measure_rect.width**2 + mag.measure_rect.height**2)
           )
@@ -68,6 +68,15 @@ class Elicit:
       text = ""
 
     self.measure_label.set_text(text)
+
+  def mag_location_changed(self, mag):
+    if mag.screen_rect:
+      text = "  (%d,%d) %dx%d" % (mag.screen_rect.x, mag.screen_rect.y,
+          mag.screen_rect.width, mag.screen_rect.height)
+    else:
+      text = ""
+
+    self.mag_label.set_text(text)
 
   def grid_check_toggled(self, check):
     self.gconf.set_bool('/apps/elicit/show_grid', check.get_active())
@@ -243,12 +252,13 @@ class Elicit:
     self.mag.connect('zoom-changed', self.mag_zoom_changed)
     self.mag.connect('grid-toggled', self.mag_grid_toggled)
     self.mag.connect('measure-changed', self.mag_measure_changed)
+    self.mag.connect('location-changed', self.mag_location_changed)
 
     hbox = gtk.HBox(False, 0)
     vbox.pack_start(hbox, False)
 
-    self.measure_label = gtk.Label()
-    hbox.pack_start(self.measure_label, True)
+    self.mag_label = gtk.Label()
+    hbox.pack_start(self.mag_label, False)
 
     icon_path = os.path.join(os.path.dirname(__file__), 'data', 'icons')
 
@@ -269,6 +279,10 @@ class Elicit:
     button.set_tooltip_text("Start Magnifying\n(Left Click to stop)")
     button.connect('clicked', self.magnify_clicked);
     hbox.pack_end(button, False)
+
+    self.measure_label = gtk.Label()
+    hbox.pack_end(self.measure_label, False)
+
 
     hbox = gtk.HBox(False, 5)
     vbox.pack_start(hbox, False)
