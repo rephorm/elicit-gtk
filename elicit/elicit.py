@@ -227,8 +227,6 @@ class Elicit:
     self.win.set_title("Elicit")
     self.win.set_icon_name('rephorm-elicit')
     self.win.connect('destroy', self.quit, None)
-    self.win.connect('key-press-event', self.cb_key_press)
-    self.win.connect('key-release-event', self.cb_key_release)
 
     vbox = gtk.VBox(False, 5)
     self.win.add(vbox)
@@ -259,6 +257,7 @@ class Elicit:
     img = gtk.Image()
     img.set_from_file(os.path.join(icon_path, "dropper-button.png"));
     button.set_image(img)
+    button.set_tooltip_text("Start Selecting Color\n(Left Click to stop)")
     button.connect('clicked', self.select_color_clicked);
     hbox.pack_end(button, False)
 
@@ -267,6 +266,7 @@ class Elicit:
     img = gtk.Image()
     img.set_from_file(os.path.join(icon_path, "magnify-button.png"));
     button.set_image(img)
+    button.set_tooltip_text("Start Magnifying\n(Left Click to stop)")
     button.connect('clicked', self.magnify_clicked);
     hbox.pack_end(button, False)
 
@@ -464,14 +464,6 @@ class Elicit:
   def action_pick_color(self, action):
     self.colorpicker.pick_start()
 
-  def cb_key_press(self, widget, event):
-    if event.keyval in self.keyval_control:
-      self.mag.set_cursor('measure')
-
-  def cb_key_release(self, widget, event):
-    if event.keyval in self.keyval_control:
-      self.mag.set_cursor('magnify')
-
   def __init__(self):
     self.palette = None
     self.color = Color()
@@ -495,8 +487,6 @@ class Elicit:
       self.palette_list.append(palette)
 
       self.palette_combo.select(0)
-
-    self.keyval_control = (gdk.keyval_from_name("Control_L"), gdk.keyval_from_name("control_R"))
 
     self.colorpicker.set_color(self.color)
 

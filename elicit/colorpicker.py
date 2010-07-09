@@ -149,17 +149,14 @@ class ColorPicker(gtk.Widget):
   def cb_button_press(self, widget, event):
     """ Callback for mouse button press events """
     if (event.button == 1):
-      self.pick_start
-      self.picking = True
-    elif (event.button == 3):
-      self.save_on_release = True
+      if self.picking:
+        self.pick_stop()
+      else:
+        self.save_on_release = True
 
   def cb_button_release(self, widget, event):
     """ Callback for mouse button release events """
-    if (event.button == 1):
-      if self.picking:
-        self.pick_stop()
-    elif (event.button == 3 and self.save_on_release):
+    if (event.button == 1 and self.save_on_release):
       self.save_on_release = False
       self.emit('save-color')
 
@@ -228,16 +225,15 @@ class ColorPicker(gtk.Widget):
     pbuf = gdk.pixbuf_new_from_file(os.path.join(self.icon_path, "dropper.png"))
     if pbuf:
       self.cursor = gdk.Cursor(self.window.get_display(), pbuf, 8, 21);
-      self.window.set_cursor(self.cursor)
 
-    self.set_tooltip_text('Click and drag:\n  Left: select color\n  Right: DnD color\n\nRight click: add to palette')
+    self.set_tooltip_text('Click and drag:\n  Left: drag-n-drop color\n\nLeft click: add to palette')
 
     self.connect("motion-notify-event", self.cb_motion_notify)
     self.connect("button-press-event", self.cb_button_press)
     self.connect("button-release-event", self.cb_button_release)
     self.connect("drag-begin", self.cb_drag_begin)
 
-    self.dnd_helper = ColorDndHelper(self, self.cb_drag_set_color, self.cb_drag_get_color, gtk.gdk.BUTTON3_MASK)
+    self.dnd_helper = ColorDndHelper(self, self.cb_drag_set_color, self.cb_drag_get_color, gtk.gdk.BUTTON1_MASK)
 
     self.raw_width = 1
     self.raw_height = 1

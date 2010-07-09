@@ -6,9 +6,6 @@ Things left to do (unprioritized):
   * Ability to save magnified images?
   * Configure columns of palette view?
 
-  * Rethink mouse bindings.
-    - left click/drag would be nice for dnd
-    - maybe use right click drag for magnifying/picking colors?
   * Add about page with instructions on usage
 
   * Averaged color selection over configurable radius

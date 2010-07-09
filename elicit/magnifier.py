@@ -38,10 +38,7 @@ class Magnifier(gtk.Widget):
       'measure-changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ()),
   }
 
-  tooltips = {
-      'magnify': 'Click and drag:\n  Left: magnify\n  Middle: pan\n  Right: DnD image\n\nScroll: zoom\n\n<Control>: measure',
-      'measure': 'Left click and drag to measure.',
-      }
+  tooltip = 'Click and drag:\n  Left: drag-n-drop image\n  Middle: pan\n  Right: measure\n\nScroll: zoom'
 
   def __init__(self):
     """Initialized the widget"""
@@ -65,6 +62,8 @@ class Magnifier(gtk.Widget):
     self.cursor = None
 
     self.set_flags(self.flags() |  gtk.CAN_FOCUS)
+
+    self.set_tooltip_text(self.tooltip)
 
   def grab_immediate(self, x, y, w, h):
     """
@@ -225,10 +224,14 @@ class Magnifier(gtk.Widget):
       'magnify' - a magnifying glass
       'measure' - a ruler
     """
-    if self.cursor == self.cursors[type]: return
-    self.cursor = self.cursors[type]
+    if (type == None):
+      self.cursor = None
+    else:
+      if self.cursor == self.cursors[type]: return
+      self.cursor = self.cursors[type]
+
     self.window.set_cursor(self.cursor)
-    self.set_tooltip_text(self.tooltips[type])
+
 
   def origin(self):
     """
@@ -279,16 +282,19 @@ class Magnifier(gtk.Widget):
     Ctrl-left starts measuring on the magnified image
     The middle button starts panning
     """
-    if event.button == 1:
-      if event.state & gdk.CONTROL_MASK:
-        if not self.has_data: return
-        self.measuring = True
-        self.measure_start = (event.x, event.y)
-        self.measure_rect = None
-        self.emit('measure-changed')
-        self.queue_draw()
-      else:
-        self.grab_start()
+    if self.grabbing:
+      return
+
+    self.set_tooltip_text("")
+
+    if event.button == 3:
+      if not self.has_data: return
+      self.measuring = True
+      self.set_cursor('measure')
+      self.measure_start = (event.x, event.y)
+      self.measure_rect = None
+      self.emit('measure-changed')
+      self.queue_draw()
     elif event.button == 2:
       self.panning = True
       self.pan_start_x = event.x - self.pan_x
@@ -337,12 +343,16 @@ class Magnifier(gtk.Widget):
 
     Stops magnifying, measuring or panning.
     """
-    if event.button == 1:
-      self.measuring = False
-      if self.grabbing:
-        self.grab_stop()
-    elif event.button == 2:
-      self.panning = False
+    if self.grabbing:
+      self.grab_stop()
+    else:
+      if event.button == 3:
+        self.measuring = False
+        self.set_cursor(None)
+      elif event.button == 2:
+        self.panning = False
+
+    self.set_tooltip_text(self.tooltip)
 
   def cb_motion_notify(self, widget, event):
     """
@@ -420,7 +430,7 @@ class Magnifier(gtk.Widget):
     pbuf = gdk.pixbuf_new_from_file(os.path.join(self.icon_path,"measure.png"))
     self.cursors['measure'] = gdk.Cursor(self.window.get_display(), pbuf, 6, 6);
 
-    self.set_cursor('magnify')
+    #self.set_cursor('magnify')
 
     self.pixbuf_width = int(self.allocation.width);
     self.pixbuf_height = int(self.allocation.height);
@@ -451,7 +461,7 @@ class Magnifier(gtk.Widget):
     self.raw_pixbuf = gdk.Pixbuf(gdk.COLORSPACE_RGB, False, 8, self.raw_width, self.raw_height)
 
     target_list = gtk.target_list_add_image_targets(None, self.TARGET_TYPE_IMAGE, True)
-    self.drag_source_set(gtk.gdk.BUTTON3_MASK, target_list, gtk.gdk.ACTION_COPY)
+    self.drag_source_set(gtk.gdk.BUTTON1_MASK, target_list, gtk.gdk.ACTION_COPY)
     self.connect("drag-data-get", self.cb_drag_data_get)
 
 
