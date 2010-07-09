@@ -263,7 +263,7 @@ class Magnifier(gtk.Widget):
 
   def grab_start(self):
     self.grabbing = True
-    gdk.pointer_grab(self.window, True, gdk.POINTER_MOTION_MASK | gdk.BUTTON_PRESS_MASK | gdk.BUTTON_RELEASE_MASK, None, None, 0L)
+    gdk.pointer_grab(self.window, False, gdk.POINTER_MOTION_MASK | gdk.BUTTON_PRESS_MASK | gdk.BUTTON_RELEASE_MASK, None, self.cursors['magnify'], 0L)
     self.grab_add()
 
   def grab_stop(self):

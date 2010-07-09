@@ -177,7 +177,6 @@ class Elicit:
     sel_action = self.actiongroup.get_action("Select Color")
     sel_action.activate()
 
-
   def magnify_clicked(self, button):
     mag_action = self.actiongroup.get_action("Magnify")
     mag_action.activate()
@@ -302,6 +301,7 @@ class Elicit:
     self.colorpicker = ColorPicker()
     frame.add(self.colorpicker)
     self.colorpicker.connect('save-color', self.picker_save_color)
+    self.colorpicker.set_magnifier(self.mag)
 
     self.colorspin = {}
     # add RGB spinboxes

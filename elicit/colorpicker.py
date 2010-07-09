@@ -36,9 +36,18 @@ class ColorPicker(gtk.Widget):
     super(ColorPicker, self).__init__()
     self.pick_rate = 60
     self.color = Color()
+    self.mag = None
     self.picking = 0
     self.pick_timeout = None
     self.save_on_release = False
+
+  def set_magnifier(self, mag):
+    """
+    Set the magnifier widget
+    This is needed so that we can pick colors directly from the magnified
+    image when possible
+    """
+    self.mag = mag
 
   def set_color(self, color):
     """
@@ -62,7 +71,7 @@ class ColorPicker(gtk.Widget):
     self.gc.set_foreground(col)
     self.queue_draw()
 
-  def pick_immediate(self, x, y):
+  def pick_immediate(self, x, y, magnifier):
     """
     Select the color at the specified pixel
 
@@ -71,18 +80,22 @@ class ColorPicker(gtk.Widget):
 
     if self.flags() & gtk.REALIZED == False: return
 
-    # grab raw screen data
-    self.raw_pixbuf.get_from_drawable(
-        gdk.get_default_root_window(),
-        gdk.colormap_get_system(),
-        x, y,
-        0, 0,
-        self.raw_width, self.raw_height)
+    if magnifier:
+      r,g,b = self.mag.raw_pixbuf.get_pixels_array()[y,x]
+    else:
+      # grab raw screen data
+      self.raw_pixbuf.get_from_drawable(
+          gdk.get_default_root_window(),
+          gdk.colormap_get_system(),
+          x, y,
+          0, 0,
+          self.raw_width, self.raw_height)
 
-    #pull out rgb value
-    #XXX first time this is called generates a warning and doesn't work.
-    #    all subsequent times are fine. why?
-    r,g,b = self.raw_pixbuf.get_pixels_array()[0,0]
+      #pull out rgb value
+      #XXX first time this is called generates a warning and doesn't work.
+      #    all subsequent times are fine. why?
+      r,g,b = self.raw_pixbuf.get_pixels_array()[0,0]
+
     self.color.set_rgb(r,g,b)
 
   def cb_pick_timeout(self):
@@ -92,7 +105,7 @@ class ColorPicker(gtk.Widget):
       return True
 
     # widget is realized, so grab data and end timer
-    self.pick_immediate(self.pick_x, self.pick_y)
+    self.pick_immediate(self.pick_x, self.pick_y, self.pick_mag)
     self.pick_timeout = None
     return False
 
@@ -105,15 +118,19 @@ class ColorPicker(gtk.Widget):
     """ Drag get color callback """
     return self.color
 
-  def pick(self, x, y):
+  def pick(self, x, y, magnifier = False):
     """
     Select the color at the specified location
+
+    If magnifier is True, then the location is specified in pixels relative to the magnifier's unmagnified image.
+    Otherwise, the location is specified in pixels relative to the screen.
 
     This does not immediately select the color, but instead sets a timeout
     so that the color selection occurs at most self.pick_rate times per
     second.
     """
     self.pick_x, self.pick_y = int(x), int(y)
+    self.pick_mag = magnifier
 
     if (self.pick_timeout == None):
       self.pick_timeout = glib.timeout_add(1000 / self.pick_rate, self.cb_pick_timeout)
@@ -121,7 +138,7 @@ class ColorPicker(gtk.Widget):
 
   def pick_start(self):
     self.picking = True
-    gdk.pointer_grab(self.window, True, gdk.POINTER_MOTION_MASK | gdk.BUTTON_PRESS_MASK | gdk.BUTTON_RELEASE_MASK, None, None, 0L)
+    gdk.pointer_grab(self.window, False, gdk.POINTER_MOTION_MASK | gdk.BUTTON_PRESS_MASK | gdk.BUTTON_RELEASE_MASK, None, self.cursor, 0L)
     self.grab_add()
 
   def pick_stop(self):
@@ -153,16 +170,34 @@ class ColorPicker(gtk.Widget):
   def cb_motion_notify(self, widget, event):
     """ Callback from mouse motion notify events """
     if (self.picking):
-      root_w, root_h = gdk.get_default_root_window().get_size()
-      x = event.x_root
-      y = event.y_root
+      # check if we are over the magnified image. if so, select from it
+      a = self.allocation
+      r = self.mag.allocation
+      ox,oy = self.mag.origin()
+      x = a.x + event.x - r.x
+      y = a.y + event.y - r.y
+      zx = int((x-ox)/self.mag.zoom)
+      zy = int((y-oy)/self.mag.zoom)
 
-      if (x < 0): x = 0
-      if (x >= root_w): x = root_w - 1
-      if (y < 0): y = 0
-      if (y >= root_h): y = root_h - 1
+      if (self.mag.has_data and
+          (x >= 0 and x < r.width) and
+          (y >= 0 and y < r.height) and
+          (zx >= 0 and zx < self.mag.raw_width) and
+          (zy >= 0 and zy < self.mag.raw_height)):
+        self.pick(zx, zy, True)
 
-      self.pick(x, y)
+      # otherwise, select from screen
+      else:
+        root_w, root_h = gdk.get_default_root_window().get_size()
+        x = event.x_root
+        y = event.y_root
+
+        if (x < 0): x = 0
+        if (x >= root_w): x = root_w - 1
+        if (y < 0): y = 0
+        if (y >= root_h): y = root_h - 1
+
+        self.pick(x, y, False)
 
   def do_realize(self):
     """ Realize the widget """

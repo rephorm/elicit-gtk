@@ -14,7 +14,3 @@ Things left to do (unprioritized):
   * Averaged color selection over configurable radius
 
 Bugs:
-
-  * Cursor doesn't change immediately when using mag / colorpicker buttons
-
-  * When picking color over magnified shot, use image data, not screen data (so grid doesn't get selected)
