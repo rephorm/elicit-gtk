@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 from elicit.elicit import Elicit
+import elicit.dbus_service as svc
 
 el = Elicit()
+
+s = svc.init(el)
 el.show()
 el.main()

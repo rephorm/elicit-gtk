@@ -25,8 +25,11 @@ distutils.core.setup(
     url=appinfo.website,
     packages=[appinfo.pkgname],
     package_data={appinfo.pkgname: ['data/icons/*.png']},
-    scripts=['bin/elicit'],
-    data_files=[('/usr/share/gconf/schemas', ['data/elicit.schemas'])],
+    scripts=['bin/elicit', 'bin/elicit_remote'],
+    data_files=[
+      ('/usr/share/gconf/schemas', ['data/elicit.schemas']),
+      ('/usr/share/dbus-1/services', ['data/com.rephorm.elicit.service'])
+      ],
     cmdclass={'install': install_with_schemas}
     )
 

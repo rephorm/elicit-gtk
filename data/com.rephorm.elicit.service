@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=com.rephorm.elicit
+Exec=/usr/local/bin/elicit
