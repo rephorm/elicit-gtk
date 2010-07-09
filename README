@@ -20,11 +20,17 @@ Installation
 ------------
 
 # ./setup.py install
+$ elicit
 
 If you want to run without installing, from the source directory run:
 
 $ PYTHONPATH=. ./bin/elicit
 
+Additionally, there is now a dbus based remote control. Running
+
+$ elicit_remote magnify     OR     $ elicit_remote select_color
+
+will start magnification OR color selection. This can be connected to global key bindings if desired.
 
 Usage
 =====
