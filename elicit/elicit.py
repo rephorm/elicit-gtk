@@ -237,7 +237,7 @@ class Elicit:
     self.win.set_icon_name('rephorm-elicit')
     self.win.connect('destroy', self.quit, None)
 
-    vbox = gtk.VBox(False, 5)
+    vbox = gtk.VBox(False, 2)
     self.win.add(vbox)
 
     menubar = self.build_menu()
