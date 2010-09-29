@@ -201,7 +201,7 @@ class Elicit:
 
     actiongroup.add_actions([
       ('Quit', gtk.STOCK_QUIT, '_Quit', '<Ctrl>q', 'Quit Elicit', self.action_quit),
-      ('Save', gtk.STOCK_QUIT, '_Save', '<Ctrl>s', 'Save Palette', self.action_save),
+      ('Save', gtk.STOCK_QUIT, '_Save Palette', '<Ctrl>s', 'Save Palette', self.action_save),
       ('About', gtk.STOCK_ABOUT, '_About', None, 'About Elicit', self.action_about),
       ('Magnify', gtk.STOCK_ABOUT, '_Magnify', '<Ctrl>z', 'Start Magnifying', self.action_magnify),
       ('Select Color', gtk.STOCK_ABOUT, 'Select _Color', '<Ctrl>d', 'Start Selecting Color', self.action_pick_color),
