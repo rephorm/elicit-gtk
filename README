@@ -81,4 +81,9 @@ Finally, you can edit the name of the selected color by changing it in the 'Colo
 
 The palettes are stored in the GIMP palette formate (.gpl) in the 'palettes' subdirectory of the user's configuration directory (usually ~/.config/elicit/)
 
+Remote
+------
 
+Elicit can also be controlled via a remote control application named `elicit_remote`. This can be used to implement desktop wide keyboard shortcuts. For example, one could bind the `Search` key (`XF86Search`) to run `elicit_remote magnify`. If elicit is not currently running, it should launch and then begin magnifying. If it is already running, it will simply start magnifying. To begin selecting a color, run `elicit_remote select_color`.
+
+Alternatively, one can use DBus to connect to the `/com/rephorm/Elicit` object on the `com.rephorm.elicit` bus. The interface `com.rephorm.Elicit` implements two methods: `Magnify()` and `SelectColor()`. These methods take no parameters and return void.
