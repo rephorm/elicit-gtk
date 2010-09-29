@@ -473,9 +473,21 @@ class Elicit:
     a.show()
 
   def action_magnify(self, action):
+    if self.mag.grabbing:
+      self.mag.grab_stop()
+
+    if self.colorpicker.picking:
+      self.colorpicker.pick_stop()
+
     self.mag.grab_start()
 
   def action_pick_color(self, action):
+    if self.colorpicker.picking:
+      self.colorpicker.pick_stop()
+
+    if self.mag.grabbing:
+      self.mag.grab_stop()
+
     self.colorpicker.pick_start()
 
   def __init__(self):
