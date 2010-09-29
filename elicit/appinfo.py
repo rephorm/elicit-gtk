@@ -5,7 +5,7 @@ dialog and for packaging.
 
 name = 'Elicit'
 pkgname = 'elicit'
-version = '2.0'
+version = '2.1.0'
 description = 'Screen magnifier and color picker',
 website = 'http://www.rephorm.com/code/elicit'
 author = 'Brian Mattern'
