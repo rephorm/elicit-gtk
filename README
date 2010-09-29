@@ -39,7 +39,7 @@ Magnification
 -------------
 After running elicit, there is a large empty box at the top called the magnifier. Click on the magnifying class icon beneath this to begin zooming in on the portion of the screen under the mouse. Left click when the region you want is shown in the magnifier. The coordinates and size of the current selected region of the screen is shown beneath the magnifier on the left.
 
-The size of the region of screen magnified is determined by the size of the  magnifier. Increase the size of the window to obtain larger regions.
+The size of the region of screen magnified is determined by the size of the magnifier. To obtain larger regions, increase the size of the window and then magnify again.
 
 Scroll the mouse wheel over the magnifier to change the zoom level. After zooming in on the image, middle click and drag to pan around on the image.
 
