@@ -19,6 +19,9 @@ from palette_view import PaletteView
 from palette_tools import PaletteList, PaletteCombo
 from cslider import CSlider
 
+HPAD = 3
+VPAD = 3
+
 if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
   raise SystemExit
@@ -244,9 +247,12 @@ class Elicit:
     menubar = self.build_menu()
     vbox.pack_start(menubar, False)
 
+    hbox = gtk.HBox(False, 0)
+    vbox.pack_start(hbox, True, True)
+
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
-    vbox.pack_start(frame, True, True)
+    hbox.pack_start(frame, True, True, padding=HPAD)
 
     self.mag = Magnifier()
     frame.add(self.mag)
@@ -259,7 +265,7 @@ class Elicit:
     vbox.pack_start(hbox, False)
 
     self.mag_label = gtk.Label()
-    hbox.pack_start(self.mag_label, False)
+    hbox.pack_start(self.mag_label, False, padding=HPAD)
 
     icon_path = os.path.join(os.path.dirname(__file__), 'data', 'icons')
 
@@ -279,7 +285,7 @@ class Elicit:
     button.set_image(img)
     button.set_tooltip_text("Start Magnifying\n(Left Click to stop)")
     button.connect('clicked', self.magnify_clicked);
-    hbox.pack_end(button, False)
+    hbox.pack_end(button, False, padding=HPAD)
 
     self.measure_label = gtk.Label()
     hbox.pack_end(self.measure_label, False)
@@ -291,7 +297,7 @@ class Elicit:
     check = gtk.CheckButton("Show Grid")
     check.set_active(self.mag.show_grid)
     check.connect('toggled', self.grid_check_toggled)
-    hbox.pack_start(check)
+    hbox.pack_start(check, padding=HPAD)
     self.grid_check = check
 
     spin = gtk.SpinButton()
@@ -299,7 +305,7 @@ class Elicit:
     spin.set_increments(1,10)
     spin.set_value(self.mag.zoom)
     spin.connect('value-changed', self.zoom_spin_value_changed)
-    hbox.pack_end(spin, False)
+    hbox.pack_end(spin, False, padding=HPAD)
     self.zoom_spin = spin
 
     zoom_label = gtk.Label("Zoom:")
@@ -311,7 +317,7 @@ class Elicit:
 
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
-    hbox.pack_start(frame, True, True)
+    hbox.pack_start(frame, True, True, padding=HPAD)
 
     self.colorpicker = ColorPicker()
     frame.add(self.colorpicker)
@@ -323,8 +329,8 @@ class Elicit:
 
     self.colorspin = {}
     # add RGB spinboxes,slider,etc
-    table = gtk.Table(5,4)
-    hbox.pack_start(table, True, True)
+    table = gtk.Table(6,4)
+    hbox.pack_start(table, True, True, padding=HPAD)
 
     row = 0
     for type in ("r","g","b"):
@@ -343,9 +349,9 @@ class Elicit:
     row = 0
     for type in ("h","s","v"):
       label = gtk.Label(type.upper())
-      table.attach(label, 2,3,row,row+1,0,0,2,2)
+      table.attach(label, 3,4,row,row+1,0,0,2,2)
       cslider = CSlider(self.color, type)
-      table.attach(cslider, 3,4,row,row+1,gtk.FILL|gtk.EXPAND,gtk.EXPAND,2,2)
+      table.attach(cslider, 4,5,row,row+1,gtk.FILL|gtk.EXPAND,gtk.EXPAND,2,2)
       spin = gtk.SpinButton()
       if type == 'h':
         spin.set_range(0,360)
@@ -355,7 +361,7 @@ class Elicit:
         spin.set_range(0,1.0)
         spin.set_increments(.01,.1)
       spin.connect('value-changed', self.color_spin_hsv_changed)
-      table.attach(spin, 4,5,row,row+1,0,gtk.EXPAND,2,2)
+      table.attach(spin, 5,6,row,row+1,0,gtk.EXPAND,2,2)
       self.colorspin[type] = spin
       row += 1
 
@@ -375,7 +381,7 @@ class Elicit:
     vbox.pack_start(hbox, False)
 
     # Palette tools
-    hbox.pack_start(gtk.Label("Palette:"), False)
+    hbox.pack_start(gtk.Label("Palette:"), False, padding=HPAD)
 
     self.palette_combo = PaletteCombo()
     hbox.pack_start(self.palette_combo)
@@ -393,13 +399,16 @@ class Elicit:
     button.set_tooltip_text("Delete Palette")
     button.set_relief(gtk.RELIEF_NONE)
     button.connect('clicked', self.delete_palette)
-    hbox.pack_start(button, False)
+    hbox.pack_start(button, False, padding=HPAD)
 
 
     # palette view
+    hbox = gtk.HBox(False, 5)
+    vbox.pack_start(hbox, False)
+
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
-    vbox.pack_start(frame, False)
+    hbox.pack_start(frame, True, padding=HPAD)
 
     self.palette_view = PaletteView()
     self.palette_view.connect('select-color', self.palette_view_select_color)
@@ -408,14 +417,14 @@ class Elicit:
 
     # color name entry / palette tools
     hbox = gtk.HBox(False, 5)
-    vbox.pack_start(hbox, False)
+    vbox.pack_start(hbox, False, padding=VPAD)
 
-    hbox.pack_start(gtk.Label("Color Name:"), False)
+    hbox.pack_start(gtk.Label("Color Name:"), False, padding=HPAD)
 
     self.color_name_entry = gtk.Entry()
     self.color_name_entry.set_sensitive(False)
     self.color_name_entry.connect('changed', self.color_name_entry_changed)
-    hbox.pack_start(self.color_name_entry, True, True)
+    hbox.pack_start(self.color_name_entry, True, True, padding=HPAD)
 
   def init_config(self):
     self.gconf = gconf.client_get_default()
