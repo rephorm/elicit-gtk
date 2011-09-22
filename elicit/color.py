@@ -89,7 +89,7 @@ class Color(gobject.GObject):
     Set the color value in HSV format
 
     The hue, h, is an integer between 0 and 360 inclusive.
-    The saturation, s, and value, v, are integers between 0 and 255
+    The saturation, s, and value, v, are floats between 0 and 1
     inclusive.
     """
 
