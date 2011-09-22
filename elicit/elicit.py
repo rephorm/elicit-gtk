@@ -17,6 +17,7 @@ from palette import Palette
 from color import Color
 from palette_view import PaletteView
 from palette_tools import PaletteList, PaletteCombo
+from cslider import CSlider
 
 if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
@@ -317,20 +318,25 @@ class Elicit:
     self.colorpicker.connect('save-color', self.picker_save_color)
     self.colorpicker.set_magnifier(self.mag)
 
+    hbox = gtk.HBox(False, 5)
+    vbox.pack_start(hbox, False)
+
     self.colorspin = {}
-    # add RGB spinboxes
-    table = gtk.Table(4,4)
-    hbox.pack_start(table, False)
+    # add RGB spinboxes,slider,etc
+    table = gtk.Table(5,4)
+    hbox.pack_start(table, True, True)
 
     row = 0
     for type in ("r","g","b"):
       label = gtk.Label(type.upper())
       table.attach(label, 0,1,row,row+1,0,0,2,2)
+      cslider = CSlider(self.color, type)
+      table.attach(cslider, 1,2,row,row+1,gtk.FILL|gtk.EXPAND,gtk.EXPAND,2,2)
       spin = gtk.SpinButton()
       spin.set_range(0,255)
       spin.set_increments(1,10)
       spin.connect('value-changed', self.color_spin_rgb_changed)
-      table.attach(spin, 1,2,row,row+1,gtk.FILL,gtk.EXPAND,2,2)
+      table.attach(spin, 2,3,row,row+1,0,gtk.EXPAND,2,2)
       self.colorspin[type] = spin
       row += 1
 
@@ -338,6 +344,8 @@ class Elicit:
     for type in ("h","s","v"):
       label = gtk.Label(type.upper())
       table.attach(label, 2,3,row,row+1,0,0,2,2)
+      cslider = CSlider(self.color, type)
+      table.attach(cslider, 3,4,row,row+1,gtk.FILL|gtk.EXPAND,gtk.EXPAND,2,2)
       spin = gtk.SpinButton()
       if type == 'h':
         spin.set_range(0,360)
@@ -347,7 +355,7 @@ class Elicit:
         spin.set_range(0,1.0)
         spin.set_increments(.01,.1)
       spin.connect('value-changed', self.color_spin_hsv_changed)
-      table.attach(spin, 3,4,row,row+1,gtk.FILL,gtk.EXPAND,2,2)
+      table.attach(spin, 4,5,row,row+1,0,gtk.EXPAND,2,2)
       self.colorspin[type] = spin
       row += 1
 
@@ -355,7 +363,7 @@ class Elicit:
     table.attach(self.hex_label,0,1,3,4,gtk.FILL,gtk.EXPAND,2,2)
 
     self.hex_entry = gtk.Entry()
-    table.attach(self.hex_entry,1,4,3,4,gtk.FILL,gtk.EXPAND,2,2)
+    table.attach(self.hex_entry,1,5,3,4,gtk.FILL,gtk.EXPAND,2,2)
     self.hex_entry.connect('changed', self.hex_entry_changed)
 
 
