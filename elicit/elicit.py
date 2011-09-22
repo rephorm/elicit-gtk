@@ -121,6 +121,9 @@ class Elicit:
     if self.palette_view.selected and color.hex() != self.palette_view.selected.hex():
       self.palette_view.select(None)
 
+    h,s,v = self.color.hsv()
+    self.wheel.set_color(h/360.,s,v)
+
   def color_spin_rgb_changed(self, spin):
     r,g,b = self.color.rgb()
     if spin == self.colorspin['r']:
@@ -315,6 +318,20 @@ class Elicit:
     zoom_label = gtk.Label("Zoom:")
     hbox.pack_end(zoom_label, False)
 
+    # color wheel
+    wheel_frame = gtk.Frame()
+    wheel_tab_icon = gtk.Image()
+    wheel_tab_icon.set_from_file(os.path.join(self.icon_path, "color-wheel-16.png"))
+    notebook.append_page(wheel_frame, wheel_tab_icon)
+
+    wheel = gtk.HSV()
+    self.wheel = wheel
+    wheel_frame.add(wheel)
+
+    wheel_frame.connect('size-allocate', self.wheel_size_allocate)
+    wheel_frame.connect('size-request', self.wheel_size_request)
+    wheel.connect('changed', self.wheel_changed)
+
     # swatch and eyedropper button
     hbox = gtk.HBox(False, 0)
     vbox.pack_start(hbox, False)
@@ -464,6 +481,27 @@ class Elicit:
     if index == None:
       index = 0
     self.palette_combo.select(index)
+
+  def wheel_size_allocate(self, frame, allocation):
+    style = frame.get_style()
+    focus_width = frame.style_get_property('focus-line-width')
+    focus_padding = frame.style_get_property('focus-padding')
+    size = (min (allocation.width, allocation.height) -
+            2 * max (style.xthickness, style.ythickness) -
+            2 * (focus_width + focus_padding))
+
+    self.wheel.set_metrics(int(size), int(size / 10))
+
+  def wheel_size_request(self, frame, requisition):
+    focus_width = frame.style_get_property('focus-line-width')
+    focus_padding = frame.style_get_property('focus-padding')
+    requisition.width = 2 * (focus_width + focus_padding)
+    requisition.height = 2 * (focus_width + focus_padding)
+
+  def wheel_changed(self, wheel):
+    h,s,v = wheel.get_color()
+    h *= 360
+    self.color.set_hsv(h,s,v)
 
   def config_changed(self, client, gconf_id, entry, user_data):
     key = entry.key[13:]
