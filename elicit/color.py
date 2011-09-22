@@ -35,9 +35,7 @@ class Color(gobject.GObject):
       'changed': (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, ())
       }
 
-  UNSET = 0
-  RGB = 1
-  HSV = 2
+  UNSET, RGB, HSV, CMYK = range(4)
 
   def __init__(self):
     """
@@ -50,6 +48,8 @@ class Color(gobject.GObject):
     self.name = "Unnamed"
     self.r = self.g = self.b = 0
     self.h = self.s = self.v = 0
+    self.c = self.m = self.y = 0
+    self.k = 100
 
   def __string__(self):
     """String representation as hex"""
@@ -72,6 +72,7 @@ class Color(gobject.GObject):
     self.r, self.g, self.b = r, g, b
     self.type = Color.RGB
     self.rgb_to_hsv()
+    self.rgb_to_cmyk()
     self.emit('changed')
 
   def set_rgb16(self, r, g, b):
@@ -101,6 +102,7 @@ class Color(gobject.GObject):
     self.h, self.s, self.v = h, s, v
     self.type = Color.HSV
     self.hsv_to_rgb()
+    self.rgb_to_cmyk()
     self.emit('changed')
 
   def set_hex(self, hex):
@@ -121,6 +123,64 @@ class Color(gobject.GObject):
     b = int(tmp[4:6],16)
 
     self.set_rgb(r,g,b)
+
+  def set_cmyk(self, c, m, y, k):
+
+    if min(c, m, y, k) < 0 or max (c, m, y, k) > 100:
+      raise ValueError("CMYK values must be between 0 and 100")
+
+    if self.c == c and self.m == m and self.y == y and self.k == k: return
+
+    self.c = c
+    self.m = m
+    self.y = y
+    self.k = k
+
+    self.type = Color.CMYK
+    self.cmyk_to_rgb()
+    self.rgb_to_hsv()
+    self.emit('changed')
+
+  def cmyk_to_rgb(self):
+    c = self.c / 100.
+    m = self.m / 100.
+    y = self.y / 100.
+    k = self.k / 100.
+
+    c = min(1, c * (1 - k) + k)
+    m = min(1, m * (1 - k) + k)
+    y = min(1, y * (1 - k) + k)
+
+    self.r = round((1. - c) * 255., 0)
+    self.g = round((1. - m) * 255., 0)
+    self.b = round((1. - y) * 255., 0)
+
+  def cmyk(self):
+    return (self.c, self.m, self.y, self.k)
+
+  def rgb_to_cmyk(self):
+    r = self.r / 255.
+    g = self.g / 255.
+    b = self.b / 255.
+
+    c = 1. - r
+    m = 1. - g
+    y = 1. - b
+    k = min(c, m, y)
+
+    if k < 1.:
+        c = round((c - k) / (1. - k) * 100, 0)
+        m = round((m - k) / (1. - k) * 100, 0)
+        y = round((y - k) / (1. - k) * 100, 0)
+        k = round(k * 100, 0)
+    else:
+        c = m = y = 0
+        k = 100
+
+    self.c = c
+    self.m = m
+    self.y = y
+    self.k = k
 
   def rgb(self):
     """Return the color as a triple of 8 bit integers, (r,g,b)"""
