@@ -369,7 +369,7 @@ class Elicit:
     table.attach(self.hex_label,0,1,3,4,gtk.FILL,gtk.EXPAND,2,2)
 
     self.hex_entry = gtk.Entry()
-    table.attach(self.hex_entry,1,5,3,4,gtk.FILL,gtk.EXPAND,2,2)
+    table.attach(self.hex_entry,1,6,3,4,gtk.FILL,gtk.EXPAND,2,2)
     self.hex_entry.connect('changed', self.hex_entry_changed)
 
 
