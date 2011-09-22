@@ -247,6 +247,7 @@ class Elicit:
     menubar = self.build_menu()
     vbox.pack_start(menubar, False)
 
+    # the magnifier
     hbox = gtk.HBox(False, 0)
     vbox.pack_start(hbox, True, True)
 
@@ -261,35 +262,18 @@ class Elicit:
     self.mag.connect('measure-changed', self.mag_measure_changed)
     self.mag.connect('location-changed', self.mag_location_changed)
 
+    # magnifier information (coordinates)
     hbox = gtk.HBox(False, 0)
     vbox.pack_start(hbox, False)
 
     self.mag_label = gtk.Label()
     hbox.pack_start(self.mag_label, False, padding=HPAD)
 
-    icon_path = os.path.join(os.path.dirname(__file__), 'data', 'icons')
-
-    button = gtk.Button()
-    button.set_relief(gtk.RELIEF_NONE)
-    img = gtk.Image()
-    img.set_from_file(os.path.join(icon_path, "dropper-button.png"));
-    button.set_image(img)
-    button.set_tooltip_text("Start Selecting Color\n(Left Click to stop)")
-    button.connect('clicked', self.select_color_clicked);
-    hbox.pack_end(button, False)
-
-    button = gtk.Button()
-    button.set_relief(gtk.RELIEF_NONE)
-    img = gtk.Image()
-    img.set_from_file(os.path.join(icon_path, "magnify-button.png"));
-    button.set_image(img)
-    button.set_tooltip_text("Start Magnifying\n(Left Click to stop)")
-    button.connect('clicked', self.magnify_clicked);
-    hbox.pack_end(button, False, padding=HPAD)
-
     self.measure_label = gtk.Label()
     hbox.pack_end(self.measure_label, False)
 
+    # magnifier tools
+    icon_path = os.path.join(os.path.dirname(__file__), 'data', 'icons')
 
     hbox = gtk.HBox(False, 5)
     vbox.pack_start(hbox, False)
@@ -299,6 +283,15 @@ class Elicit:
     check.connect('toggled', self.grid_check_toggled)
     hbox.pack_start(check, padding=HPAD)
     self.grid_check = check
+
+    button = gtk.Button()
+    button.set_relief(gtk.RELIEF_NONE)
+    img = gtk.Image()
+    img.set_from_file(os.path.join(icon_path, "magnify-button.png"));
+    button.set_image(img)
+    button.set_tooltip_text("Start Magnifying\n(Left Click to stop)")
+    button.connect('clicked', self.magnify_clicked);
+    hbox.pack_end(button, False, padding=HPAD)
 
     spin = gtk.SpinButton()
     spin.set_range(1,50)
@@ -311,7 +304,7 @@ class Elicit:
     zoom_label = gtk.Label("Zoom:")
     hbox.pack_end(zoom_label, False)
 
-
+    # swatch and eyedropper button
     hbox = gtk.HBox(False, 5)
     vbox.pack_start(hbox, False)
 
@@ -324,11 +317,21 @@ class Elicit:
     self.colorpicker.connect('save-color', self.picker_save_color)
     self.colorpicker.set_magnifier(self.mag)
 
+    button = gtk.Button()
+    button.set_relief(gtk.RELIEF_NONE)
+    img = gtk.Image()
+    img.set_from_file(os.path.join(icon_path, "dropper-button.png"));
+    button.set_image(img)
+    button.set_tooltip_text("Start Selecting Color\n(Left Click to stop)")
+    button.connect('clicked', self.select_color_clicked);
+    hbox.pack_end(button, False)
+
+    # color values (sliders and spinboxes)
     hbox = gtk.HBox(False, 5)
     vbox.pack_start(hbox, False)
 
     self.colorspin = {}
-    # add RGB spinboxes,slider,etc
+
     table = gtk.Table(6,4)
     hbox.pack_start(table, True, True, padding=HPAD)
 
@@ -372,7 +375,6 @@ class Elicit:
     table.attach(self.hex_entry,1,6,3,4,gtk.FILL,gtk.EXPAND,2,2)
     self.hex_entry.connect('changed', self.hex_entry_changed)
 
-
     sep = gtk.HSeparator()
     vbox.pack_start(sep, False)
 
@@ -380,7 +382,6 @@ class Elicit:
     hbox = gtk.HBox(False, 5)
     vbox.pack_start(hbox, False)
 
-    # Palette tools
     hbox.pack_start(gtk.Label("Palette:"), False, padding=HPAD)
 
     self.palette_combo = PaletteCombo()
@@ -415,7 +416,7 @@ class Elicit:
     self.palette_view.connect('delete-color', self.palette_view_delete_color)
     frame.add(self.palette_view)
 
-    # color name entry / palette tools
+    # color name entry
     hbox = gtk.HBox(False, 5)
     vbox.pack_start(hbox, False, padding=VPAD)
 
