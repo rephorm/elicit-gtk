@@ -275,14 +275,8 @@ class Elicit:
     # magnifier tools
     icon_path = os.path.join(os.path.dirname(__file__), 'data', 'icons')
 
-    hbox = gtk.HBox(False, 5)
+    hbox = gtk.HBox(False, 0)
     vbox.pack_start(hbox, False)
-
-    check = gtk.CheckButton("Show Grid")
-    check.set_active(self.mag.show_grid)
-    check.connect('toggled', self.grid_check_toggled)
-    hbox.pack_start(check, padding=HPAD)
-    self.grid_check = check
 
     button = gtk.Button()
     button.set_relief(gtk.RELIEF_NONE)
@@ -292,6 +286,12 @@ class Elicit:
     button.set_tooltip_text("Start Magnifying\n(Left Click to stop)")
     button.connect('clicked', self.magnify_clicked);
     hbox.pack_end(button, False, padding=HPAD)
+
+    check = gtk.CheckButton("Show Grid")
+    check.set_active(self.mag.show_grid)
+    check.connect('toggled', self.grid_check_toggled)
+    hbox.pack_start(check, padding=HPAD)
+    self.grid_check = check
 
     spin = gtk.SpinButton()
     spin.set_range(1,50)
@@ -305,8 +305,17 @@ class Elicit:
     hbox.pack_end(zoom_label, False)
 
     # swatch and eyedropper button
-    hbox = gtk.HBox(False, 5)
+    hbox = gtk.HBox(False, 0)
     vbox.pack_start(hbox, False)
+
+    button = gtk.Button()
+    button.set_relief(gtk.RELIEF_NONE)
+    img = gtk.Image()
+    img.set_from_file(os.path.join(icon_path, "dropper-button.png"));
+    button.set_image(img)
+    button.set_tooltip_text("Start Selecting Color\n(Left Click to stop)")
+    button.connect('clicked', self.select_color_clicked);
+    hbox.pack_end(button, False, padding=HPAD)
 
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
@@ -316,15 +325,6 @@ class Elicit:
     frame.add(self.colorpicker)
     self.colorpicker.connect('save-color', self.picker_save_color)
     self.colorpicker.set_magnifier(self.mag)
-
-    button = gtk.Button()
-    button.set_relief(gtk.RELIEF_NONE)
-    img = gtk.Image()
-    img.set_from_file(os.path.join(icon_path, "dropper-button.png"));
-    button.set_image(img)
-    button.set_tooltip_text("Start Selecting Color\n(Left Click to stop)")
-    button.connect('clicked', self.select_color_clicked);
-    hbox.pack_end(button, False)
 
     # color values (sliders and spinboxes)
     hbox = gtk.HBox(False, 5)
