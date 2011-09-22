@@ -247,9 +247,22 @@ class Elicit:
     menubar = self.build_menu()
     vbox.pack_start(menubar, False)
 
-    # the magnifier
+    # notebook with magnifier, etc
     hbox = gtk.HBox(False, 0)
     vbox.pack_start(hbox, True, True)
+    notebook = gtk.Notebook()
+    self.notebook = notebook
+    hbox.pack_start(notebook, True, True, padding=HPAD)
+
+    # magnifier tab
+    mag_vbox = gtk.VBox(False, 2)
+    mag_tab_icon = gtk.Image()
+    mag_tab_icon.set_from_file(os.path.join(self.icon_path, "magnify-16.png"))
+    notebook.append_page(mag_vbox, mag_tab_icon)
+
+    # the magnifier
+    hbox = gtk.HBox(False, 0)
+    mag_vbox.pack_start(hbox, True, True)
 
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
@@ -264,7 +277,7 @@ class Elicit:
 
     # magnifier information (coordinates)
     hbox = gtk.HBox(False, 0)
-    vbox.pack_start(hbox, False)
+    mag_vbox.pack_start(hbox, False)
 
     self.mag_label = gtk.Label()
     hbox.pack_start(self.mag_label, False, padding=HPAD)
@@ -273,15 +286,13 @@ class Elicit:
     hbox.pack_end(self.measure_label, False)
 
     # magnifier tools
-    icon_path = os.path.join(os.path.dirname(__file__), 'data', 'icons')
-
     hbox = gtk.HBox(False, 0)
-    vbox.pack_start(hbox, False)
+    mag_vbox.pack_start(hbox, False)
 
     button = gtk.Button()
     button.set_relief(gtk.RELIEF_NONE)
     img = gtk.Image()
-    img.set_from_file(os.path.join(icon_path, "magnify-button.png"));
+    img.set_from_file(os.path.join(self.icon_path, "magnify-button.png"));
     button.set_image(img)
     button.set_tooltip_text("Start Magnifying\n(Left Click to stop)")
     button.connect('clicked', self.magnify_clicked);
@@ -311,7 +322,7 @@ class Elicit:
     button = gtk.Button()
     button.set_relief(gtk.RELIEF_NONE)
     img = gtk.Image()
-    img.set_from_file(os.path.join(icon_path, "dropper-button.png"));
+    img.set_from_file(os.path.join(self.icon_path, "dropper-button.png"));
     button.set_image(img)
     button.set_tooltip_text("Start Selecting Color\n(Left Click to stop)")
     button.connect('clicked', self.select_color_clicked);
@@ -512,6 +523,8 @@ class Elicit:
     self.palette = None
     self.color = Color()
     self.color.connect('changed', self.color_changed)
+
+    self.icon_path = os.path.join(os.path.dirname(__file__), 'data', 'icons')
 
     self.init_config()
     self.build_gui()
