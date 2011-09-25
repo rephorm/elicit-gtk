@@ -91,7 +91,6 @@ def hsv_to_rgb(h,s,v):
 
   return (r,g,b)
 
-
 def rgb_to_cmyk(r,g,b):
   r = r / 255.
   g = g / 255.
@@ -325,6 +324,5 @@ class Color(gobject.GObject):
   def cmyk_to_rgb(self):
     """Update the internal RGB values from the current CMYK values"""
     self.r, self.g, self.b = cmyk_to_rgb(self.c, self.m, self.y, self.k)
-
 
 gobject.type_register(Color)
