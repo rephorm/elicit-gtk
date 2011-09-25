@@ -123,6 +123,7 @@ class Elicit:
 
     h,s,v = self.color.hsv()
     self.wheel.set_color(h/360.,s,v)
+    self.gconf.set_string('/apps/elicit/color', self.color.hex())
 
   def color_spin_rgb_changed(self, spin):
     r,g,b = self.color.rgb()
