@@ -1,6 +1,10 @@
 import gobject
 
 """
+  Utility functions for converting between different colorspaces (RGB, HSV, CMYK).
+
+  The Color class handles representing a single, optionally named, color value with cached access to values in all color spaces.
+
   A note about RGB values
 
   8 bit colors take on values x in [0,255)
@@ -16,6 +20,151 @@ import gobject
 
   Converting 16 -> 8 -> 16 causes a downward shift for low values and an upward shift for high values.
 """
+
+
+def rgb_to_hsv(r, g, b):
+  """
+  Convert form RGB to HSV
+
+  Returns:
+    (h,s,v)
+  """
+
+  col = (r, g, b)
+  maxc = 0
+  minc = 0
+
+  if col[1] > col[maxc]: maxc = 1
+  if col[2] > col[maxc]: maxc = 2
+  if col[1] < col[minc]: minc = 1
+  if col[2] < col[minc]: minc = 2
+
+  # black is easy
+  if col[maxc] == 0:
+    return (0,0,0)
+
+  v = col[maxc] / 255.0
+  s = (1.0 - float(col[minc])/col[maxc])
+
+  if col[maxc] == col[minc]:
+    h = 0
+  else:
+    h = 60 * ( (maxc * 2) +
+        (float(col[(maxc + 1)%3] - col[(maxc+2)%3])) / (col[maxc] - col[minc]) )
+  if (h < 0): h += 360
+
+  return (h,s,v)
+
+def hsv_to_rgb(h,s,v):
+  """
+  Convert form HSV to RGB
+
+  Returns:
+    (r,g,b)
+  """
+  if (s == 0):
+    r = g = b = int(255*v)
+    return (r,g,b)
+
+  h = h / 60.0
+  v = int(255 * v)
+  i = int(h)
+  f = h - i
+  p = int(v * (1 - s))
+  q = int(v * (1 - s * f))
+  t = int(v * (1 - s * (1 - f)))
+
+  if i == 0:
+    r, g, b = v, t, p
+  elif i == 1:
+    r, g, b = q, v, p
+  elif i == 2:
+    r, g, b = p, v, t
+  elif i == 3:
+    r, g, b = p, q, v
+  elif i == 4:
+    r, g, b = t, p, v
+  elif i == 5:
+    r, g, b = v, p, q
+  else: # i == 6, same as i == 0
+    r, g, b = v, t, p
+
+  return (r,g,b)
+
+
+def rgb_to_cmyk(r,g,b):
+  r = r / 255.
+  g = g / 255.
+  b = b / 255.
+
+  c = 1. - r
+  m = 1. - g
+  y = 1. - b
+  k = min(c, m, y)
+
+  if k < 1.:
+    c = round((c - k) / (1. - k) * 100, 0)
+    m = round((m - k) / (1. - k) * 100, 0)
+    y = round((y - k) / (1. - k) * 100, 0)
+    k = round(k * 100, 0)
+  else:
+    c = m = y = 0
+    k = 100
+
+  return (c,m,y,k)
+
+def cmyk_to_rgb(c, m, y, k):
+  c = c / 100.
+  m = m / 100.
+  y = y / 100.
+  k = k / 100.
+
+  c = min(1, c * (1 - k) + k)
+  m = min(1, m * (1 - k) + k)
+  y = min(1, y * (1 - k) + k)
+
+  r = round((1. - c) * 255., 0)
+  g = round((1. - m) * 255., 0)
+  b = round((1. - y) * 255., 0)
+
+  return (r,g,b)
+
+def hex_to_rgb(hex):
+  """
+  Convert a hexidecimal string to RGB values
+
+  The string may start with an optional hash "#", which is ignored.
+  The remaining characters are RRGGBB, where RR is the hexidecimal red
+  value between 00 and FF inclusive, and likewise for GG and BB.
+
+  The hex values may be given as upper or lower case.
+  """
+  tmp = hex
+  if tmp[0] == '#': tmp = tmp[1:]
+  if len(tmp) != 6: raise ValueError("Invalid Hex format")
+  r = int(tmp[0:2],16)
+  g = int(tmp[2:4],16)
+  b = int(tmp[4:6],16)
+
+  return (r,g,b)
+
+def rgb_to_hex(r, g, b, uppercase=False, hash=True):
+  """
+  Return the color value as a hexidecimal RGB string.
+
+  Parameters:
+    r, g, b:   red, green and bluee color values (0 to 255) 
+    uppercase: boolean specifying whether hex letters should be uppercase
+               or not
+    hash:      boolean specifying whether preceding # should be included
+  """
+  if uppercase:
+    format = "%02X%02X%02X"
+  else:
+    format = "%02x%02x%02x"
+  if hash: format = "#" + format
+
+  return format % (r, g, b)
 
 class Color(gobject.GObject):
   """
@@ -105,26 +254,12 @@ class Color(gobject.GObject):
     self.rgb_to_cmyk()
     self.emit('changed')
 
-  def set_hex(self, hex):
-    """
-    Set the color value using a hexidecimal string
-
-    The string may start with an optional hash "#", which is ignored.
-    The remaining characters are RRGGBB, where RR is the hexidecimal red
-    value between 00 and FF inclusive, and likewise for GG and BB.
-
-    The hex values may be given as upper or lower case.
-    """
-    tmp = hex
-    if tmp[0] == '#': tmp = tmp[1:]
-    if len(tmp) != 6: raise ValueError("Invalid Hex format")
-    r = int(tmp[0:2],16)
-    g = int(tmp[2:4],16)
-    b = int(tmp[4:6],16)
-
-    self.set_rgb(r,g,b)
-
   def set_cmyk(self, c, m, y, k):
+    """
+    Set the color value in CMYK format
+
+    All values are between 0 and 100 inclusive
+    """
 
     if min(c, m, y, k) < 0 or max (c, m, y, k) > 100:
       raise ValueError("CMYK values must be between 0 and 100")
@@ -141,46 +276,13 @@ class Color(gobject.GObject):
     self.rgb_to_hsv()
     self.emit('changed')
 
-  def cmyk_to_rgb(self):
-    c = self.c / 100.
-    m = self.m / 100.
-    y = self.y / 100.
-    k = self.k / 100.
+  def set_hex(self, hex):
+    """
+    Set the color value using a hexidecimal string
 
-    c = min(1, c * (1 - k) + k)
-    m = min(1, m * (1 - k) + k)
-    y = min(1, y * (1 - k) + k)
-
-    self.r = round((1. - c) * 255., 0)
-    self.g = round((1. - m) * 255., 0)
-    self.b = round((1. - y) * 255., 0)
-
-  def cmyk(self):
-    return (self.c, self.m, self.y, self.k)
-
-  def rgb_to_cmyk(self):
-    r = self.r / 255.
-    g = self.g / 255.
-    b = self.b / 255.
-
-    c = 1. - r
-    m = 1. - g
-    y = 1. - b
-    k = min(c, m, y)
-
-    if k < 1.:
-        c = round((c - k) / (1. - k) * 100, 0)
-        m = round((m - k) / (1. - k) * 100, 0)
-        y = round((y - k) / (1. - k) * 100, 0)
-        k = round(k * 100, 0)
-    else:
-        c = m = y = 0
-        k = 100
-
-    self.c = c
-    self.m = m
-    self.y = y
-    self.k = k
+    See hex_to_rgb for details.
+    """
+    self.set_rgb(*hex_to_rgb(hex))
 
   def rgb(self):
     """Return the color as a triple of 8 bit integers, (r,g,b)"""
@@ -194,6 +296,9 @@ class Color(gobject.GObject):
     """Return the color as a triple, (h,s,v)"""
     return (self.h, self.s, self.v)
 
+  def cmyk(self):
+    return (self.c, self.m, self.y, self.k)
+
   def hex(self, uppercase=False, hash=True):
     """
     Return the color value as a hexidecimal RGB string.
@@ -203,66 +308,23 @@ class Color(gobject.GObject):
                  or not
       hash:      boolean specifying whether preceding # should be included
     """
-    if uppercase:
-      format = "%02X%02X%02X"
-    else:
-      format = "%02x%02x%02x"
-    if hash: format = "#" + format
-
-    return format % (self.r, self.g, self.b)
+    return rgb_to_hex(*self.rgb(), uppercase=uppercase, hash=hash)
 
   def rgb_to_hsv(self):
     """ Update the internal HSV values from the current RGB values."""
-
-    col = (self.r, self.g, self.b)
-    maxc = 0
-    minc = 0
-
-    if col[1] > col[maxc]: maxc = 1
-    if col[2] > col[maxc]: maxc = 2
-    if col[1] < col[minc]: minc = 1
-    if col[2] < col[minc]: minc = 2
-
-    # black is easy
-    if col[maxc] == 0:
-      self.h = self.s = self.v = 0
-      return
-
-    self.v = col[maxc] / 255.0
-    self.s = (1.0 - float(col[minc])/col[maxc])
-
-    if col[maxc] == col[minc]:
-      self.h = 0
-    else:
-      self.h = 60 * ( (maxc * 2) +
-          (float(col[(maxc + 1)%3] - col[(maxc+2)%3])) / (col[maxc] - col[minc]) )
-    if (self.h < 0): self.h += 360
+    self.h, self.s, self.v = rgb_to_hsv(self.r, self.g, self.b)
    
   def hsv_to_rgb(self):
     """Update the internal RGB values from the current HSV values"""
-    if (self.s == 0):
-      self.r = self.g = self.b = int(255*self.v)
-      return
+    self.r, self.g, self.b = hsv_to_rgb(self.h, self.s, self.v)
 
-    h = self.h / 60.0
-    v = int(255 * self.v)
-    i = int(h)
-    f = h - i
-    p = int(v * (1 - self.s))
-    q = int(v * (1 - self.s * f))
-    t = int(v * (1 - self.s * (1 - f)))
+  def rgb_to_cmyk(self):
+    """ Update the internal CMYK values from the current RGB values."""
+    self.c, self.m, self.y, self.k = rgb_to_cmyk(self.r, self.g, self.b)
 
-    if i == 0:
-      self.r, self.g, self.b = v, t, p
-    elif i == 1:
-      self.r, self.g, self.b = q, v, p
-    elif i == 2:
-      self.r, self.g, self.b = p, v, t
-    elif i == 3:
-      self.r, self.g, self.b = p, q, v
-    elif i == 4:
-      self.r, self.g, self.b = t, p, v
-    elif i == 5:
-      self.r, self.g, self.b = v, p, q
+  def cmyk_to_rgb(self):
+    """Update the internal RGB values from the current CMYK values"""
+    self.r, self.g, self.b = cmyk_to_rgb(self.c, self.m, self.y, self.k)
+
 
 gobject.type_register(Color)
