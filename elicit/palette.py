@@ -130,7 +130,13 @@ class Palette(gobject.GObject):
         filename = os.path.join(self.PaletteDir, filename)
       self.filename = filename
 
-    if self.filename == None:
+    rename_palette_file = False
+    delete_palette_file = None
+    if self.filename and os.path.basename(self.filename).startswith('untitled-palette') and self.name and self.name != 'Untitled Palette':
+      delete_palette_file = self.filename
+      rename_palette_file = True
+
+    if self.filename == None or rename_palette_file:
       if self.PaletteDir:
         base = '-'.join(self.name.lower().split(' '))
         self.filename = os.path.join(self.PaletteDir, base + '.gpl')
@@ -153,6 +159,11 @@ class Palette(gobject.GObject):
       f.write("#\n")
       for c in self.colors:
         f.write("%3d %3d %3d\t%s\n" % (c.r, c.g, c.b, c.name))
+
+    if delete_palette_file and delete_palette_file != self.filename:
+      # if we've gotten this far, then palette is successfully saved to new file, so delete old one.
+      os.unlink(delete_palette_file)
+
 
   def delete(self):
     """Delete the palette file on disk"""

@@ -93,6 +93,7 @@ class Elicit:
     c.set_rgb(*picker.color.rgb())
     self.palette.append(c)
     self.palette_view.select(c)
+    self.palette.save()
 
   def palette_view_select_color(self, palette_view, color):
     if color == None:
@@ -105,10 +106,12 @@ class Elicit:
 
   def palette_view_delete_color(self, palette_view, color):
     self.palette.remove(color)
+    self.palette.save()
 
   def color_name_entry_changed(self, color_name_entry):
     if self.palette and self.palette_view.selected:
       self.palette_view.selected.name = color_name_entry.get_text()
+      self.palette.save()
 
   def color_changed(self, color):
     self.colorspin['r'].set_value(self.color.r)
