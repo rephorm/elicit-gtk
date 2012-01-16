@@ -8,7 +8,7 @@ except ImportError:
   exit()
 
 
-if len(sys.argv) != 2:
+if len(sys.argv) < 2:
   print """Usage: %s <command>
   Where <command> is either 'magnify' or 'select_color'""" % sys.argv[0]
   exit(1)
@@ -26,8 +26,19 @@ except dbus.DBusException:
   exit()
 
 command = sys.argv[1]
-if command == 'magnify':
-  obj.Magnify()
-elif command == 'select_color':
-  obj.SelectColor()
+args = sys.argv[2:]
+
+commands = {
+    'magnify': obj.Magnify,
+    'select_color': obj.SelectColor,
+    'set_hex': obj.SetHex,
+    'get_hex': obj.GetHex,
+    }
+
+if command in commands:
+  ret = commands[command](*args)
+  if ret is not None:
+    print ret
+else:
+  print "Command '{command}' is unknown".format(command=command)
 

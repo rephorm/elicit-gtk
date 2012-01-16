@@ -6,5 +6,5 @@ import elicit.dbus_service as svc
 el = Elicit()
 
 el.show()
-s = svc.init(el)
+svc.init(el)
 el.main()
