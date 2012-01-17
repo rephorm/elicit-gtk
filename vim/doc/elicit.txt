@@ -1,0 +1,60 @@
+*elicit.txt*  Two-way integration with Elicit colorpicker
+
+Functionality: Allows editing hexidecimal colors using the
+               Elicit color picking application
+               (http://rephorm.com/code/elicit)
+
+Author:        Brian Mattern <http://rephorm.com>
+License:       Same terms as Vim itself (see |license|)
+==============================================================================
+CONTENTS                                                      *elicit-contents*
+
+   1. Introduction ............................. |elicit-introduction|
+   2. Requirements ............................. |elicit-requirements|
+   3. Usage .................................... |elicit-usage|
+      3.1 Basics ............................... |elicit-usage-basics|
+      3.1 Functions ............................ |elicit-usage-functions|
+   4. Known issues ............................. |elicit-known-issues|
+==============================================================================
+INTRODUCTION                                              *elicit-introduction*
+
+Elicit is a screen zoomer and color selector using GTK and python. This script
+allows one to send hex color values between VIM and Elicit.
+
+==============================================================================
+REQUIREMENTS                                              *elicit-requirements*
+
+First, Elicit must be installed. See http://rephorm.com/code/elicit for links
+and information about Elicit itself.
+
+This script requires VIM to be compiled with |+python| support. The command >
+
+  :echo has('python')
+
+will return 1 if this is the case. Communication with Elicit occurs over the
+DBUS protocol, so a dbus session must be running (this is the default for
+GNOME and KDE desktops).
+
+The |elicit-autoreplace| functionality requires that VIM has |clientserver|
+support, and is currently running as a server. For |gvim| this is the default.
+For console vim, you must include the |--servername| option.
+
+==============================================================================
+USAGE                                                            *elicit-usage*
+
+By default, elicit.vim will add keybindings that being with <leader>e.
+This can be disabled by adding the following line to your |vimrc|: >
+
+  let g:elicit_map_keys = 0
+
+The default set of keybinds are:
+
+  <leader>ee  -  Send hex value under cursor to elicit
+  <leader>er  -  Replace WORD under cursor with hex value from elicit
+  <leader>ea  -  Start autoreplacing WORD under cursor with hex value from
+                 elicit
+  <leader>es
+==============================================================================
+KNOWN ISSUES                                              *elicit-known-issues*
+==============================================================================
+ vim:tw=78:sw=4:ts=8:ft=help:norl:
