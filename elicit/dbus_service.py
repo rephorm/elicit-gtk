@@ -48,16 +48,22 @@ if HAS_DBUS:
 
     @dbus.service.method(dbus_interface=ELICIT_INTERFACE)
     def StartSignalling(self, servername):
+      if servername in self.servers:
+        return
+
       self.servers.append(str(servername))
       if not self._connection_id:
         self._connect_signal()
 
     @dbus.service.method(dbus_interface=ELICIT_INTERFACE)
     def StopSignalling(self, servername):
+      if servername not in self.servers:
+        return False
+
       self.servers.remove(str(servername))
       if len(self.servers) == 0:
         self._disconnect_signal()
-
+      return True
 
     def _connect_signal(self):
       self._connection_id = self.elicit.color.connect('changed', self._on_color_changed)
@@ -74,7 +80,7 @@ if HAS_DBUS:
 
     def _notify_server(self, server, color):
       import subprocess
-      command = ':call elicit#Elicit_NotifyChange("{hex}")<cr>'.format(hex=color.hex())
+      command = '<esc>:call elicit#Elicit_NotifyChange("{hex}")<cr>'.format(hex=color.hex())
       args = ['vim','--servername', server, '--remote-send', command]
       ret = subprocess.call(args)
       # if the call failed, disconnect so we don't continuously call
