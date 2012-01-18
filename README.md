@@ -1,37 +1,37 @@
-============
-Elicit (gtk)
-============
-
-Introduction
-============
+Elicit
+======
 
 Elicit is a designers tool that allows one to magnify sections of the screen and select colors from any application, and organize those colors into palettes.
 
 Dependencies
-------------
+============
 
 Elicit is written in python for the gtk toolkit. As such, it requires:
 
-python 2.6 
-pygtk  2.16
-pygobject 2.18
-numpy 1.3
+* python 2.6+
+* pygtk  2.16+
+* pygobject 2.18+
+* numpy 1.3+
 
 Earlier versions may work, but have not been tested.
 
 Installation
-------------
+============
 
-# ./setup.py install
-$ elicit
+    # ./setup.py install
+    $ elicit
 
 If you want to run without installing, from the source directory run:
 
-$ PYTHONPATH=. ./bin/elicit
+    $ PYTHONPATH=. ./bin/elicit
 
 Additionally, there is now a dbus based remote control. Running
 
-$ elicit_remote magnify     OR     $ elicit_remote select_color
+    $ elicit_remote magnify
+
+OR
+
+    $ elicit_remote select_color
 
 will start magnification OR color selection. This can be connected to global key bindings if desired.
 
@@ -87,6 +87,6 @@ The palettes are stored in the GIMP palette formate (.gpl) in the 'palettes' sub
 Remote
 ------
 
-Elicit can also be controlled via a remote control application named ``elicit_remote``. This can be used to implement desktop wide keyboard shortcuts. For example, one could bind the ``Search`` key (``XF86Search``) to run ``elicit_remote magnify``. If elicit is not currently running, it should launch and then begin magnifying. If it is already running, it will simply start magnifying. To begin selecting a color, run ``elicit_remote select_color``.
+Elicit can also be controlled via a remote control application named `elicit_remote`. This can be used to implement desktop wide keyboard shortcuts. For example, one could bind the `Search` key (`XF86Search`) to run `elicit_remote magnify`. If elicit is not currently running, it should launch and then begin magnifying. If it is already running, it will simply start magnifying. To begin selecting a color, run `elicit_remote select_color`.
 
-Alternatively, one can use DBus to connect to the ``/com/rephorm/Elicit`` object on the ``com.rephorm.elicit`` bus. The interface ``com.rephorm.Elicit`` implements two methods: ``Magnify()`` and ``SelectColor()``. These methods take no parameters and return void.
+Alternatively, one can use DBus to connect to the `/com/rephorm/Elicit` object on the `com.rephorm.elicit` bus. The interface `com.rephorm.Elicit` implements two methods: `Magnify()` and `SelectColor()`. These methods take no parameters and return void.
