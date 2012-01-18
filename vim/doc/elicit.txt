@@ -12,8 +12,7 @@ CONTENTS                                                      *elicit-contents*
    1. Introduction ............................. |elicit-introduction|
    2. Requirements ............................. |elicit-requirements|
    3. Usage .................................... |elicit-usage|
-      3.1 Basics ............................... |elicit-usage-basics|
-      3.1 Functions ............................ |elicit-usage-functions|
+      3.1 Auto-replace ......................... |elicit-auto-replace|
    4. Known issues ............................. |elicit-known-issues|
 ==============================================================================
 INTRODUCTION                                              *elicit-introduction*
@@ -47,14 +46,52 @@ This can be disabled by adding the following line to your |vimrc|: >
 
   let g:elicit_map_keys = 0
 
-The default set of keybinds are:
+The default keybinds are:
 
   <leader>ee  -  Send hex value under cursor to elicit
-  <leader>er  -  Replace WORD under cursor with hex value from elicit
-  <leader>ea  -  Start autoreplacing WORD under cursor with hex value from
+  <leader>ei  -  Insert hex value from elicit at cursor
+  <leader>er  -  Replace hex value under cursor with value from elicit
+  <leader>ea  -  Start auto-replacing hex value under cursor with hex value from
                  elicit
-  <leader>es
+  <leader>es  -  Stop auto-replacing
+
+The following functions are available:
+
+elicit#Elicit_SendColor(hex)
+elicit#Elicit_SendCurrentColor()
+elicit#Elicit_ReceiveColor()
+elicit#Elicit_InsertColor()
+elicit#Elicit_ReplaceCurrentColor()
+elicit#Elicit_StartAutoReplace()
+elicit#Elicit_StopAutoReplace()
+
+------------------------------------------------------------------------------
+Auto-replace                                              *elicit-auto-replace*
+
+Auto-replace mode first sends the hex value under the cursor to Elicit. The
+hex value in VIM will then automatically be replaced when the color is changed
+in Elicit. This will continue until Elicit is quit, or auto-replace is turned
+off.
+
+To start auto-replace use either <leader>ea OR >
+  :call elicit#Elicit_StartAutoReplace().
+
+To stop auto-replace use either <leader>es OR >
+  :call elicit#Elicit_StopAutoReplace().
+
 ==============================================================================
 KNOWN ISSUES                                              *elicit-known-issues*
+
+The line number and position within the line of the hex value is stored when
+auto-replace is started. If this changes (e.g. text is inserted before the hex
+value) while auto-replace is active, then the incorrect text will be udpated.
+
+The auto-replace functionality currently requires that VIM be running in
+clientserver mode (see :help clientserver). This is the default for gui VIM,
+but not for cli VIM. Although most communication between VIM and Elicit occurs
+via DBUS, this is not yet integrated with the VIM mainloop, so signalling from
+Elicit -> VIM (e.g. to notify a color change) can not be done over DBUS. For
+now, we instead signal VIM using its own clientserver protocol (vim --remote).
+
 ==============================================================================
- vim:tw=78:sw=4:ts=8:ft=help:norl:
+vim:tw=78:sw=4:ts=8:ft=help:norl:
