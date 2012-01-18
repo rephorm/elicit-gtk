@@ -28,7 +28,11 @@ distutils.core.setup(
     scripts=['bin/elicit', 'bin/elicit_remote'],
     data_files=[
       ('/usr/share/gconf/schemas', ['data/elicit.schemas']),
-      ('/usr/share/dbus-1/services', ['data/com.rephorm.elicit.service'])
+      ('/usr/share/dbus-1/services', ['data/com.rephorm.elicit.service']),
+      ('/usr/share/elicit/', ['README.md']),
+      ('/usr/share/elicit/vim/autoload', ['vim/autoload/elicit.vim']),
+      ('/usr/share/elicit/vim/plugin', ['vim/plugin/elicit.vim']),
+      ('/usr/share/elicit/vim/doc', ['vim/doc/elicit.txt']),
       ],
     cmdclass={'install': install_with_schemas}
     )
