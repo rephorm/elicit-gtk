@@ -104,9 +104,7 @@ To install, I recommend using [pathogen][pathogen] to manage vim plugins. Then, 
 
 For more information, see vim/doc/elicit.vim
 
-Here is a screencast demonstrating the functionality:
+I have also made a [screencast demonstrating the vim plugin][screencast].
 
-<iframe width="420" height="315" src="http://www.youtube.com/embed/1h5VB9hUg-E" frameborder="0" allowfullscreen></iframe>
-
-
+[screencast]: http://www.youtube.com/watch?v=1h5VB9hUg-E
 [pathogen]: https://github.com/tpope/vim-pathogen
