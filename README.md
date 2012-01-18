@@ -90,3 +90,14 @@ Remote
 Elicit can also be controlled via a remote control application named `elicit_remote`. This can be used to implement desktop wide keyboard shortcuts. For example, one could bind the `Search` key (`XF86Search`) to run `elicit_remote magnify`. If elicit is not currently running, it should launch and then begin magnifying. If it is already running, it will simply start magnifying. To begin selecting a color, run `elicit_remote select_color`.
 
 Alternatively, one can use DBus to connect to the `/com/rephorm/Elicit` object on the `com.rephorm.elicit` bus. The interface `com.rephorm.Elicit` implements two methods: `Magnify()` and `SelectColor()`. These methods take no parameters and return void.
+
+Vim Support
+-----------
+
+Elicit includes integration with the Vim text editor. This allows one to easily pass color values between Vim and Elicit.
+
+To install, I recommend using [pathogen][pathogen] to manage vim plugins. Then, just copy (or symlink) Elicit's vim/ directory into your .vim/bundle/ directory.
+
+For more information, see vim/doc/elicit.vim
+
+[pathogen]: https://github.com/tpope/vim-pathogen
