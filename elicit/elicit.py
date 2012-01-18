@@ -125,7 +125,8 @@ class Elicit:
       self.palette_view.select(None)
 
     h,s,v = self.color.hsv()
-    self.wheel.set_color(h/360.,s,v)
+    if self.wheel:
+      self.wheel.set_color(h/360.,s,v)
     self.gconf.set_string('/apps/elicit/color', self.color.hex())
 
   def color_spin_rgb_changed(self, spin):
@@ -334,13 +335,18 @@ class Elicit:
     wheel_tab_icon.set_from_file(os.path.join(self.icon_path, "color-wheel-16.png"))
     notebook.append_page(wheel_frame, wheel_tab_icon)
 
-    wheel = gtk.HSV()
-    self.wheel = wheel
-    wheel_frame.add(wheel)
+    if hasattr(gtk, 'HSV'):
+      wheel = gtk.HSV()
+      self.wheel = wheel
+      wheel_frame.add(wheel)
 
-    wheel_frame.connect('size-allocate', self.wheel_size_allocate)
-    wheel_frame.connect('size-request', self.wheel_size_request)
-    wheel.connect('changed', self.wheel_changed)
+      wheel_frame.connect('size-allocate', self.wheel_size_allocate)
+      wheel_frame.connect('size-request', self.wheel_size_request)
+      wheel.connect('changed', self.wheel_changed)
+    else:
+      self.wheel = None
+      label = gtk.Label("The color wheel requires gtk ver. 2.28 or higher.")
+      wheel_frame.add(label)
 
     # swatch and eyedropper button
     hbox = gtk.HBox(False, 0)
