@@ -3,6 +3,10 @@ Elicit
 
 Elicit is a designers tool that allows one to magnify sections of the screen and select colors from any application, and organize those colors into palettes.
 
+Here is what it looks like:
+
+![Elicit Screenshot](https://github.com/rephorm/elicit-gtk/raw/master/data/screenshot.png)
+
 Dependencies
 ============
 
@@ -99,5 +103,10 @@ Elicit includes integration with the Vim text editor. This allows one to easily 
 To install, I recommend using [pathogen][pathogen] to manage vim plugins. Then, just copy (or symlink) Elicit's vim/ directory into your .vim/bundle/ directory.
 
 For more information, see vim/doc/elicit.vim
+
+Here is a screencast demonstrating the functionality:
+
+<iframe width="420" height="315" src="http://www.youtube.com/embed/1h5VB9hUg-E" frameborder="0" allowfullscreen></iframe>
+
 
 [pathogen]: https://github.com/tpope/vim-pathogen
