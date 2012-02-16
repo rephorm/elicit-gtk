@@ -126,6 +126,22 @@ function! s:GetColor()
   endif
 endfunction
 
+function! s:ParseRGB(hex)
+  let hex = a:hex
+  if hex[0] == '#'
+    let hex = hex[1:]
+  endif
+
+  return [str2nr(hex[0:1], 16), str2nr(hex[2:3], 16), str2nr(hex[4:5], 16)]
+endfunction
+
+function! s:ColorIsLight(hex)
+  let [r,g,b] = s:ParseRGB(a:hex)
+  let l = (0.21 * r + 0.72 * g + 0.07 * b)
+  echo [r,g,b,l]
+  return (l > 127)
+endfunction
+
 function! elicit#Elicit_SendColor(hex)
   " Send a color value to elicit
   py send_color(vim.eval("a:hex"))
@@ -149,13 +165,24 @@ function! s:GetWord(pos)
   return line[a:pos[1]-1:a:pos[2]-1]
 endfunction
 
+function! s:MatchPos(pos, group)
+  " Highlight word a pos
+  let word = s:GetWord(a:pos)
+  let matchstr = '\%'.a:pos[0].'l\%'.a:pos[1].'c'.word
+  return matchadd(a:group, matchstr)
+endfunction
+
+function! s:HighlightColor(pos, group)
+  let hex = s:GetWord(a:pos)
+  execute "highlight ElicitAutoReplace guibg=".hex." guifg=". (s:ColorIsLight(hex) ? '#002b36' : '#fdf6e3')
+  return s:MatchPos(a:pos, a:group)
+endfunction
+
 function! s:ReplaceWord(pos,word)
   " Replace word at `pos` with `word`
   "
   " See GetWord for the format of `pos`
   let line = getline(a:pos[0])
-  echo a:pos
-
   let newline = a:word . line[a:pos[2]:]
   if a:pos[1] > 1
     let newline = line[:a:pos[1]-2] . newline
@@ -165,7 +192,7 @@ endfunction
 
 function! s:InsertString(string)
   " Insert string at current cursor position
-  let cmd = "normal i".a:string.""
+  let cmd = "normal! i".a:string.""
   exe cmd
 endfunction
 
@@ -191,6 +218,10 @@ function! elicit#Elicit_NotifyChange(hex)
     return
   endif
   call s:ReplaceWord(s:curpos, a:hex)
+  if exists('s:auto_highlight_id')
+    call matchdelete(s:auto_highlight_id)
+    let s:auto_highlight_id = s:HighlightColor(s:curpos, 'ElicitAutoReplace')
+  endif
 endfunction
 
 function! elicit#Elicit_StartAutoReplace()
@@ -209,6 +240,10 @@ function! elicit#Elicit_StartAutoReplace()
     return
   endif
 
+  if exists('s:curpos')
+    call elicit#Elicit_StopAutoReplace()
+  endif
+
   let pos = s:GetColorPos()
   if pos[0] == 0
     echomsg "Not currently on a color value."
@@ -219,6 +254,9 @@ function! elicit#Elicit_StartAutoReplace()
   let hex = s:GetWord(pos)
   py send_color(vim.eval("hex"))
   py start_signalling()
+  if g:elicit_highlight_auto
+    let s:auto_highlight_id = s:HighlightColor(pos, 'ElicitAutoReplace')
+  endif
 endfunction
 
 function! elicit#Elicit_StopAutoReplace()
@@ -228,6 +266,9 @@ function! elicit#Elicit_StopAutoReplace()
     return
   endif
   py stop_signalling()
+  if exists('s:auto_highlight_id')
+    call matchdelete(s:auto_highlight_id)
+    unlet s:auto_highlight_id
+  endif
   unlet s:curpos
 endfunction
-
