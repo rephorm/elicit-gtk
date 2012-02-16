@@ -173,6 +173,10 @@ function! s:MatchPos(pos, group)
 endfunction
 
 function! s:HighlightColor(pos, group)
+  " Highlight hex color at pos
+  " Background is set to specified color
+  " Foreground is set to contrasting light or dark color (from solarized
+  " theme)
   let hex = s:GetWord(a:pos)
   execute "highlight ElicitAutoReplace guibg=".hex." guifg=". (s:ColorIsLight(hex) ? '#002b36' : '#fdf6e3')
   return s:MatchPos(a:pos, a:group)
@@ -197,11 +201,13 @@ function! s:InsertString(string)
 endfunction
 
 function! elicit#Elicit_ReceiveColor()
+  " Return current color from Elicit
   py vim.command("let hex = '%s'"%receive_color())
   return hex
 endfunction
 
 function! elicit#Elicit_InsertColor()
+  " Insert color from elicit at cursor
   call s:InsertString(elicit#Elicit_ReceiveColor())
 endfunction
 
@@ -213,6 +219,7 @@ function! elicit#Elicit_ReplaceCurrentColor()
 endfunction
 
 function! elicit#Elicit_NotifyChange(hex)
+  " Tell vim that the color in elicit has changed
   if !exists('s:curpos')
     echomsg "Not currently auto-replacing."
     return
