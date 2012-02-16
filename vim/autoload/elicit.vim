@@ -178,6 +178,12 @@ function! s:HighlightColor(pos, group)
   " Foreground is set to contrasting light or dark color (from solarized
   " theme)
   let hex = s:GetWord(a:pos)
+
+  " Add '#' if it is missing
+  if hex[0] != '#'
+    let hex = '#'.hex
+  endif
+
   execute "highlight ElicitAutoReplace guibg=".hex." guifg=". (s:ColorIsLight(hex) ? '#002b36' : '#fdf6e3')
   return s:MatchPos(a:pos, a:group)
 endfunction
@@ -215,6 +221,12 @@ function! elicit#Elicit_ReplaceCurrentColor()
   " Replace color under cursor with color from elicit
   let hex = elicit#Elicit_ReceiveColor()
   let pos = s:GetColorPos()
+
+  " Strip '#' off of received hex if color being replaced does not have it
+  if s:GetWord(pos)[0] != '#'
+    let hex = hex[1:]
+  endif
+
   call s:ReplaceWord(pos, hex)
 endfunction
 
@@ -224,6 +236,14 @@ function! elicit#Elicit_NotifyChange(hex)
     echomsg "Not currently auto-replacing."
     return
   endif
+
+  let hex = a:hex
+
+  " strip hash if needed
+  if (!s:has_hash && hex[0] == '#')
+    let hex = hex[1:]
+  endif
+
   call s:ReplaceWord(s:curpos, a:hex)
   if exists('s:auto_highlight_id')
     call matchdelete(s:auto_highlight_id)
@@ -259,6 +279,9 @@ function! elicit#Elicit_StartAutoReplace()
 
   let s:curpos = pos
   let hex = s:GetWord(pos)
+
+  let s:has_hash = (hex[0] == '#' ? 1 : 0)
+
   py send_color(vim.eval("hex"))
   py start_signalling()
   if g:elicit_highlight_auto
