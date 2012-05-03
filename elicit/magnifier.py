@@ -269,7 +269,13 @@ class Magnifier(gtk.Widget):
 
   def grab_start(self):
     self.grabbing = True
-    gdk.pointer_grab(self.window, False, gdk.POINTER_MOTION_MASK | gdk.BUTTON_PRESS_MASK | gdk.BUTTON_RELEASE_MASK, None, self.cursors['magnify'], 0L)
+    gdk.pointer_grab(
+        self.window,
+        owner_events=False,
+        event_mask=gdk.POINTER_MOTION_MASK | gdk.BUTTON_PRESS_MASK | gdk.BUTTON_RELEASE_MASK,
+        confine_to=None,
+        cursor=self.cursors.get('magnify'),
+        time=0L)
     self.grab_add()
 
   def grab_stop(self):
@@ -427,11 +433,17 @@ class Magnifier(gtk.Widget):
           | gdk.POINTER_MOTION_MASK
           | gdk.POINTER_MOTION_HINT_MASK)
 
-    pbuf = gdk.pixbuf_new_from_file(os.path.join(self.icon_path,"magnify.png"))
-    self.cursors['magnify'] = gdk.Cursor(self.window.get_display(), pbuf, 6, 6);
+    try:
+      pbuf = gdk.pixbuf_new_from_file(os.path.join(self.icon_path,"magnify.png"))
+      self.cursors['magnify'] = gdk.Cursor(self.window.get_display(), pbuf, 6, 6);
+    except glib.GError:
+      self.cursors['magnify'] = None
 
-    pbuf = gdk.pixbuf_new_from_file(os.path.join(self.icon_path,"measure.png"))
-    self.cursors['measure'] = gdk.Cursor(self.window.get_display(), pbuf, 6, 6);
+    try:
+      pbuf = gdk.pixbuf_new_from_file(os.path.join(self.icon_path,"measure.png"))
+      self.cursors['measure'] = gdk.Cursor(self.window.get_display(), pbuf, 6, 6);
+    except glib.GError:
+      self.cursors['measure'] = None
 
     #self.set_cursor('magnify')
 
